@@ -1,0 +1,102 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- CARTOON BACKGROUND -->
+<div class="admin-cartoons">
+  <img src="https://storyset.com/illustration/data-analysis/amico.svg" class="cartoon left">
+  <img src="https://storyset.com/illustration/business-decisions/pana.svg" class="cartoon right">
+</div>
+
+<div class="content">
+
+  <!-- ADMIN HEADER -->
+  <header class="admin-header">
+    <h1>📊 Admin Dashboard</h1>
+    <p>Student Internship & Placement Applications</p>
+  </header>
+  <button onclick="logoutAdmin()" style="
+  margin-bottom:15px;
+  padding:8px 14px;
+  border-radius:10px;
+  background:#334155;
+  color:white;
+  font-weight:bold;
+  border:none;
+  cursor:pointer;
+">
+🚪 Logout
+</button>
+
+
+  <!-- ADMIN TABLE -->
+  <section class="dashboard">
+
+    <h2 class="table-title">📋 Student Application Records</h2>
+    <button onclick="clearApplications()" style="
+  margin-bottom:15px;
+  padding:10px 16px;
+  border-radius:10px;
+  background:#ef4444;
+  color:white;
+  font-weight:bold;
+  border:none;
+  cursor:pointer;
+">
+🗑 Clear All Applications
+</button>
+
+
+    <div class="table-wrapper">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Full Name</th>
+            <th>Email</th>
+            <th>College Name</th>
+            <th>contact number</th>
+            <th>linkdin ID</th>
+            <th>Branch</th>
+            <th>Year of graduating</th>
+            <th>CGPA</th>
+            <th>Applied Role</th>
+            <th>Date</th>
+            <th>Status</th>
+             <th>Actions</th>
+
+
+
+          </tr>
+        </thead>
+        <tbody id="appTable"></tbody>
+      </table>
+    </div>
+
+  </section>
+
+</div>
+<!-- GLOBAL GLASS POPUP -->
+<div id="globalModal" class="glass-overlay">
+  <div class="glass-modal">
+    <h2 id="modalTitle">Title</h2>
+    <p id="modalMessage">Message</p>
+
+    <div class="modal-actions">
+      <button id="modalOk">OK</button>
+      <button id="modalCancel" style="display:none;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="admin.js"></script>
+</body>
+</html>
+
+

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Coding Protocol</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- VIDEO BACKGROUND -->
+<video class="video-bg" autoplay muted loop playsinline>
+  <source src="background.mp4" type="video/mp4">
+</video>
+<div class="overlay"></div>
+
+<div class="content">
+
+  <header>
+    <h1>🎓 Coding Protocol</h1>
+    <p>Smart Internship & Placement Platform</p>
+  </header>
+
+  <!-- RESUME UPLOAD -->
+  <section class="resume">
+    <h2>Upload Resume</h2>
+
+    <input type="file" id="resumeFile" accept=".pdf,.doc,.docx">
+
+    <p id="result">No resume uploaded</p>
+
+    <button id="applyBtn" onclick="apply()" style="display:none;">
+      Apply for Internship
+    </button>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section class="dashboard">
+    <h2>Available Opportunities</h2>
+
+    <div class="cards">
+
+      <div class="card">
+        <h3>Web Developer Intern</h3>
+        <p>Company: Google</p>
+        <p>Eligibility: CSE / IT</p>
+        <p>Stipend: ₹20,000</p>
+        <span class="verified">✔ Verified</span>
+        <button onclick="checkMatch('Web Developer Intern')">Check Resume Match</button>
+      </div>
+
+      <div class="card">
+        <h3>Backend Developer Intern</h3>
+        <p>Company: Amazon</p>
+        <p>Eligibility: CSE / IT</p>
+        <p>Stipend: ₹22,000</p>
+        <span class="verified">✔ Verified</span>
+        <button onclick="checkMatch('Backend Developer Intern')">Check Resume Match</button>
+      </div>
+
+      <div class="card">
+        <h3>Data Analyst Intern</h3>
+        <p>Company: Microsoft</p>
+        <p>Eligibility: Any Branch</p>
+        <p>Stipend: ₹15,000</p>
+        <span class="verified">✔ Verified</span>
+        <button onclick="checkMatch('Data Analyst Intern')">Check Resume Match</button>
+      </div>
+
+      <div class="card">
+        <h3>Machine Learning Intern</h3>
+        <p>Company: IBM</p>
+        <p>Eligibility: CSE / IT / AI</p>
+        <p>Stipend: ₹25,000</p>
+        <span class="verified">✔ Verified</span>
+        <button onclick="checkMatch('Machine Learning Intern')">Check Resume Match</button>
+      </div>
+
+      <div class="card">
+        <h3>Mechanical Design Intern</h3>
+        <p>Company: Tata Motors</p>
+        <p>Eligibility: Mechanical</p>
+        <p>Stipend: ₹12,000</p>
+        <span class="verified">✔ Verified</span>
+        <button onclick="checkMatch('Mechanical Design Intern')">Check Resume Match</button>
+      </div>
+
+      <div class="card">
+        <h3>Electrical Engineer Intern</h3>
+        <p>Company: L&T</p>
+        <p>Eligibility: Electrical</p>
+        <p>Stipend: ₹14,000</p>
+        <span class="verified">✔ Verified</span>
+        <button onclick="checkMatch('Electrical Engineer Intern')">Check Resume Match</button>
+      </div>
+
+      <div class="card">
+        <h3>UI/UX Designer Intern</h3>
+        <p>Company: Adobe</p>
+        <p>Eligibility: Any Branch</p>
+        <p>Stipend: ₹18,000</p>
+        <span class="verified">✔ Verified</span>
+        <button onclick="checkMatch('UI/UX Designer Intern')">Check Resume Match</button>
+      </div>
+
+      <div class="card">
+        <h3>Digital Marketing Intern</h3>
+        <p>Company: Flipkart</p>
+        <p>Eligibility: Any Branch</p>
+        <p>Stipend: ₹10,000</p>
+        <span class="verified">✔ Verified</span>
+        <button onclick="checkMatch('Digital Marketing Intern')">Check Resume Match</button>
+      </div>
+
+      <div class="card">
+        <h3>Business Analyst Intern</h3>
+        <p>Company: Deloitte</p>
+        <p>Eligibility: Any Branch</p>
+        <p>Stipend: ₹16,000</p>
+        <span class="verified">✔ Verified</span>
+        <button onclick="checkMatch('Business Analyst Intern')">Check Resume Match</button>
+      </div>
+
+      <div class="card">
+        <h3>HR Intern</h3>
+        <p>Company: Infosys</p>
+        <p>Eligibility: Any Branch</p>
+        <p>Stipend: ₹9,000</p>
+        <span class="verified">✔ Verified</span>
+        <button onclick="checkMatch('HR Intern')">Check Resume Match</button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- APPLY FORM  -->
+  <form class="resume" id="applyForm" style="display:none;">
+  <h2>Student Details</h2>
+
+  <input id="name" placeholder="Full Name" required><br><br>
+  <input id="email" placeholder="Email" required><br><br>
+  <input id="collegeName" placeholder="College Name" required><br><br>
+  <input id="contact" placeholder="Contact Number" required><br><br>
+  <input id="linkedin" placeholder="LinkedIn Profile URL" required><br><br>
+  <input id="cgpa" placeholder="Current CGPA" required><br><br>
+  <input id="branch" placeholder="Branch" required><br><br>
+  <input id="year" placeholder="Year of Graduating" required><br><br>
+
+  <button type="button" onclick="submitApplication()">Submit Application</button>
+</form>
+
+
+<!-- AI CAREER CHAT -->
+<div class="ai-chat">
+  <div class="ai-header">🤖 Career AI Tutor</div>
+  <div class="ai-messages" id="aiMessages">
+    <div class="ai-bot">
+      Hi! I’m your personal career tutor .
+      just type resume,jobs,internship,interview and i will answer.
+    </div>
+  </div>
+  <div class="ai-input">
+    <input type="text" id="aiInput" placeholder="Ask anything...">
+    <button onclick="aiSend()">Send</button>
+  </div>
+</div>
+<!-- USER CLASSIC GLASS POPUP -->
+<div id="userPopup" class="glass-overlay">
+  <div class="glass-modal">
+    <h2 id="userPopupTitle">Title</h2>
+    <p id="userPopupMsg">Message</p>
+
+    <div class="modal-actions">
+      <button id="userPopupYes">OK</button>
+      <button id="userPopupNo">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="firebase.js"></script>
+<script type="module" src="script.js"></script>
+</body>
+</html>
+
+
+
+  
