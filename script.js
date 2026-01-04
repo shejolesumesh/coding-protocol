@@ -7,7 +7,7 @@ let selectedRole = "";
 let resumeUploaded = false;
 let lastMatchScore = 0;
 
-/* ===== RESUME UPLOAD ===== */
+
 document.addEventListener("DOMContentLoaded", () => {
   const resumeInput = document.getElementById("resumeFile");
 
@@ -22,7 +22,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-/* ===== CHECK RESUME MATCH (FINAL LOGIC) ===== */
 function checkMatch(role) {
   if (!resumeUploaded) {
     showUserPopup(
@@ -48,7 +47,7 @@ return;
   const resumeSizeKB = resumeFile.size / 1024;
   const resumeName = resumeFile.name.toLowerCase();
 
-  /* ❌ Empty / useless resume */
+
   if (resumeSizeKB < 40) {
     lastMatchScore = 0;
     document.getElementById("result").innerText =
@@ -58,7 +57,7 @@ return;
     return;
   }
 
-  /* Role hints (soft relevance) */
+
   const roleHints = {
     "Web Developer Intern": ["web", "frontend", "developer"],
     "Backend Developer Intern": ["backend", "server", "api"],
@@ -79,25 +78,25 @@ return;
     if (resumeName.includes(hint)) roleRelevant = true;
   });
 
-  /* ===== SCORE CALCULATION ===== */
+
   let match = 0;
 
-  // Resume quality (size)
+
   if (resumeSizeKB > 40) match += 30;
   if (resumeSizeKB > 120) match += 20;
   if (resumeSizeKB > 250) match += 15;
 
-  // Role relevance (HIGH WEIGHT)
+  
   if (roleRelevant) match += 30;
   else match += 15;
 
-  // Small randomness (to avoid same %)
-  match += Math.floor(Math.random() * 6); // +0 to +5
+  
+  match += Math.floor(Math.random() * 6); 
 
   if (match > 95) match = 95;
   lastMatchScore = match;
 
-  /* ===== RESULT ===== */
+  
   if (match >= 75) {
     document.getElementById("result").innerText =
       `🤖 Resume Match for ${role}: ${match}% ✅ Eligible to apply`;
@@ -110,7 +109,7 @@ return;
   }
 }
 
-/* ===== APPLY ===== */
+
 function apply() {
   if (lastMatchScore < 75) {
   showUserPopup(
@@ -126,7 +125,7 @@ function apply() {
   form.scrollIntoView({ behavior: "smooth" });
 }
 
-/* ===== SUBMIT APPLICATION (MANDATORY) ===== */
+
 async function submitApplication() {
 
   const name = document.getElementById("name").value.trim();
@@ -138,7 +137,7 @@ async function submitApplication() {
   const branch = document.getElementById("branch").value.trim();
   const year = document.getElementById("year").value.trim();
 
-  // ❌ Empty check
+  
   if (!name || !email || !collegeName || !contact || !linkedin || !cgpa || !branch || !year) {
     showUserPopup(
   "⚠️ Incomplete Form",
@@ -148,7 +147,7 @@ return;
 
   }
 
-  // ❌ Email validation
+  
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     showUserPopup(
@@ -159,7 +158,7 @@ return;
 
   }
 
-  // ❌ Contact number validation
+  
   if (!/^[6-9]\d{9}$/.test(contact)) {
     showUserPopup(
   "📱 Invalid Contact",
@@ -169,7 +168,7 @@ return;
 
   }
 
-  // ❌ LinkedIn validation
+  
   if (!linkedin.startsWith("https://www.linkedin.com/")) {
     showUserPopup(
   "🔗 Invalid LinkedIn",
@@ -179,7 +178,7 @@ return;
 
   }
 
-  // ❌ CGPA validation
+  
   if (cgpa < 0 || cgpa > 10) {
     showUserPopup(
   "📊 Invalid CGPA",
@@ -226,14 +225,13 @@ return;
 }
 
 
-  // Reset form
+  
   document.getElementById("applyForm").reset();
   document.getElementById("applyForm").style.display = "none";
 }
 
 
 
-/* ===== AI CHATBOT  ===== */
 function detectIntent(text) {
   text = text.toLowerCase();
   if (text.includes("resume")) return "resume";
@@ -268,20 +266,16 @@ function aiSend() {
   }, 300);
 }
 
-/* ===== EXPOSE FUNCTIONS ===== */
 window.checkMatch = checkMatch;
 window.apply = apply;
 window.submitApplication = submitApplication;
 window.aiSend = aiSend;
-/* =====================================================
-   CAREERPATH AI – ADVANCED CAREER CHATBOT (FINAL)
-   Covers: Resume | Jobs | Internships | Interviews
-   ===================================================== */
+
 
 (function () {
 
   const KNOWLEDGE_BASE = [
-    /* ================= RESUME ================= */
+    
     {
       keywords: ["what is resume", "resume kya", "resume meaning"],
       answer:
@@ -303,7 +297,7 @@ window.aiSend = aiSend;
         "Use the XYZ formula: Achieved X, measured by Y, by doing Z. Example: Improved website load time by 30% by optimizing JavaScript code."
     },
 
-    /* ================= INTERNSHIP ================= */
+    
     {
       keywords: ["what is internship", "internship kya"],
       answer:
@@ -320,7 +314,7 @@ window.aiSend = aiSend;
         "Apply early, build 2–3 solid projects, optimize LinkedIn, and message recruiters with a short, focused introduction."
     },
 
-    /* ================= JOB ================= */
+    
     {
       keywords: ["job kaise milegi", "how to get job"],
       answer:
@@ -332,7 +326,7 @@ window.aiSend = aiSend;
         "Around 70% jobs are filled through referrals and networking, not job portals. Connections matter."
     },
 
-    /* ================= INTERVIEW ================= */
+    
     {
       keywords: ["tell me about yourself"],
       answer:
@@ -354,7 +348,7 @@ window.aiSend = aiSend;
         "Choose a real weakness and explain what you are doing to improve it. Avoid clichés like perfectionism."
     },
 
-    /* ================= MOTIVATION ================= */
+    
     {
       keywords: ["demotivated", "motivation", "stress"],
       answer:
@@ -394,35 +388,35 @@ window.aiSend = aiSend;
     }, 300);
   }
 
-  /* FORCE BIND */
+
   window.aiSend = aiSend;
 
 })();
-/* ================= CAREER AI CHATBOT (STABLE VERSION) ================= */
+
 
 (function () {
 
-  // ===== KNOWLEDGE BASE =====
+  
   const knowledge = [
-    // RESUME
+    
     { keys: ["resume"], ans: "A resume is a professional document that highlights your skills, education, projects, and experience to get shortlisted for interviews." },
     { keys: ["ats"], ans: "ATS (Applicant Tracking System) is software that scans resumes for keywords. Use job-description keywords and simple formatting to pass ATS." },
     { keys: ["resume format"], ans: "The best resume format is reverse-chronological. Keep it one page, use bullet points, and avoid images or tables." },
     { keys: ["resume tips"], ans: "Use action verbs, quantify results, tailor your resume for every job, and focus on projects if you are a fresher." },
 
-    // INTERNSHIP
+    
     { keys: ["internship"], ans: "An internship helps students gain real-world experience. Focus on learning skills, not just stipend." },
     { keys: ["internship without experience"], ans: "Build projects, contribute to GitHub, complete certifications, and show learning ability. Projects count as experience." },
 
-    // JOB
+    
     { keys: ["job"], ans: "To get a job, focus on skills, apply consistently, network on LinkedIn, and prepare well for interviews." },
     { keys: ["hidden job market"], ans: "Most jobs are filled through referrals and networking, not job portals. Connections matter." },
 
-    // INTERVIEW
+    
     { keys: ["tell me about yourself"], ans: "Answer using Past–Present–Future: background, current work, and why you want this role." },
     { keys: ["interview"], ans: "Interviews test how you think. Be clear, think aloud, and use STAR method for behavioral questions." },
 
-    // MOTIVATION
+    
     { keys: ["demotivated","tired","fail","failure","stress","confused","give up","quit"], ans: "Feeling low is normal. Stay consistent, focus on small daily progress, and trust the process. Discipline beats motivation." }
   ];
 
@@ -439,11 +433,11 @@ window.aiSend = aiSend;
     "Don’t quit—refine your strategy."
   ];
 
-  // ===== FIND ANSWER =====
+  
   function getAnswer(question) {
     const q = question.toLowerCase();
 
-    // Check knowledge base
+    
     for (let item of knowledge) {
       for (let k of item.keys) {
         if (q.includes(k)) {
@@ -452,18 +446,18 @@ window.aiSend = aiSend;
       }
     }
 
-    // Auto motivation detection
+  
     for (let word of ["sad","tired","lost","demotivated","stress","fail","failure"]) {
       if (q.includes(word)) {
         return motivationLines[Math.floor(Math.random() * motivationLines.length)];
       }
     }
 
-    // Fallback
+    
     return "Sorry Sir/Ma’am, I am not developed enough to give an accurate answer to this question yet.";
   }
 
-  // ===== SEND MESSAGE =====
+  
   function aiSend() {
     const input = document.getElementById("aiInput");
     const messages = document.getElementById("aiMessages");
@@ -483,7 +477,7 @@ window.aiSend = aiSend;
     }, 300);
   }
 
-  // ===== EXPOSE FUNCTION =====
+  
   window.aiSend = aiSend;
 
 })();
