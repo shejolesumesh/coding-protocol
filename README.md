@@ -1,66 +1,107 @@
-Coding Protocol Hack’Vento 2026, GDGoC IET DAVV Coding Protocol is an internship and placement application platform that simplifies student applications and offers an efficient management system for administrators. Live Prototype Links
-Student Portal: 👉 https://coding-protocol-edf72.web.app 
-Admin Panel: 👉 https://coding-protocol-edf72.web.app/admin-login.html 
-Problem Statement Students often struggle to manage their internship and placement applications. Administrators also need a simple, centralized system to review and manage these applications effectively. 
-Our Solution Coding Protocol offers: A student portal for submitting applications A secure admin panel for viewing, approving, rejecting, and managing applications Real-time data storage using Firebase
-Student Features
+#  Coding Protocol  
+### Internship & Placement Application Platform
 
-Apply for internships with complete details.
+**Hackathon:** Hack’Vento 2026  
+**Organized by:** GDGoC IET DAVV  
+**Team Name:** Coding Protocol  
 
-Clean and user-friendly interface.
+---
 
-Real-time submission to the database.
+##  Overview
 
-Admin Features
+**Coding Protocol** is a web-based internship and placement application platform designed to simplify the application process for students and provide administrators with a centralized system to manage applications efficiently.
 
-Secure admin login.
+The platform offers **two separate interfaces**:
+- **Student Portal** – for submitting internship and placement applications  
+- **Admin Panel** – for reviewing, approving, rejecting, and managing applications  
 
-View all student applications.
+The goal is to replace manual and scattered application processes with a **single, structured, and easy-to-use digital solution**.
 
-Approve or reject applications.
+---
 
-Clear all applications.
+## 🌐 Live Demo
 
-Status tracking: Pending, Approved, Rejected.
+- **Student Portal:**  
+  👉 https://coding-protocol-edf72.web.app  
 
-Tech Stack
+- **Admin Panel:**  
+  👉 https://coding-protocol-edf72.web.app/admin-login.html  
 
-Frontend
+---
 
-HTML5
+## ❓ Problem Statement
 
-CSS
+Students often struggle to manage multiple internship and placement applications, which can lead to confusion, errors, and missed opportunities.  
+Administrators, on the other hand, require a simple and organized way to review, track, and manage large volumes of applications without relying on spreadsheets or manual workflows.
 
-JavaScript
+---
 
-Backend / Cloud (Google Technologies)
+## 💡 Solution
 
-Firebase Hosting
+Coding Protocol provides a **centralized application management system** that:
 
-Firebase Firestore
+- Enables students to submit applications through a clean and user-friendly interface  
+- Allows administrators to securely view and manage all applications in one place  
+- Stores and updates data in real time using cloud-based services  
 
-Firebase Authentication
+This improves efficiency, transparency, and overall user experience for both students and administrators.
 
-GitHub Repository
+---
 
-https://github.com/shejolesumesh/coding-protocol
+## 👨‍🎓 Student Features
 
-Project Status
+- Apply for internships by submitting complete personal and academic details  
+- Clean and intuitive user interface  
+- Real-time submission and storage of applications  
+- Resume upload and eligibility-based application flow  
 
-Fully working prototype
+---
 
-Live deployed
+## 🛠️ Admin Features
 
-Hackathon ready
+- Secure admin login system  
+- View all student applications in a structured table format  
+- Approve or reject applications with a single click  
+- Clear all applications when required  
+- Application status tracking (Pending, Approved, Rejected)  
 
-Team
+---
 
-Team Name: Coding Protocol  
-Hackathon: Hack’Vento 2026  
-Organized by: GDGoC IET DAVV
+## 🧰 Tech Stack
 
-Final Note
+### Frontend
+- HTML5  
+- CSS3  
+- JavaScript  
 
-This project is built as a complete working prototype that focuses on real-world usability and scalability for campus internship and placement management.
+### Backend / Cloud (Google Technologies)
+- Firebase Hosting  
+- Firebase Firestore (Database)  
+- Firebase Authentication  
+
+---
+
+## 📂 Project Status
+
+- ✅ Fully working prototype  
+- ✅ Live deployed  
+- ✅ Hackathon-ready  
+
+---
+
+## 🔗 Repository
+
+👉 https://github.com/shejolesumesh/coding-protocol  
+
+---
+
+## 🏁 Conclusion
+
+Coding Protocol demonstrates how a well-structured web application can solve real-world problems in internship and placement management. The project focuses on clarity, usability, and practical implementation using modern web technologies, making it suitable for academic, hackathon, and real-world use cases.
+
+---
+
+⭐ If you find this project useful, feel free to star the repository!
+
 
 
