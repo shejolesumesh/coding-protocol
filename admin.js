@@ -1,4 +1,4 @@
-// 🔹 FIRESTORE IMPORTS (TOP)
+
 import {
   collection,
   getDocs,
@@ -9,15 +9,15 @@ import {
 
 import { db } from "./firebase.js";
 
-// 🔐 AUTH CHECK
+
 if (sessionStorage.getItem("adminLoggedIn") !== "true") {
   window.location.replace("admin-login.html");
 }
 
-// 📋 TABLE
+
 const table = document.getElementById("appTable");
 
-// 🔄 LOAD DATA FROM FIREBASE
+
 async function loadApplications() {
   const snapshot = await getDocs(collection(db, "applications"));
 
@@ -74,7 +74,7 @@ async function loadApplications() {
 
 loadApplications();
 
-// 🗑 CLEAR ALL FROM FIREBASE
+
 window.clearApplications = function () {
   showPopup(
     "⚠️ Confirm Action",
