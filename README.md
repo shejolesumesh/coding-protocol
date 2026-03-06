@@ -8,8 +8,8 @@
 **Coding Protocol** is a full-stack internship and placement platform built for the **Hack'Vento 2026** hackathon. It features a dual-dashboard architecture, providing a seamless application experience for students and a powerful, real-time management system for administrators. 
 
 ###  Live Demos
-* [Student Portal](https://coding-protocol-edf72.web.app/)
-* [Admin Portal](https://coding-protocol-edf72.web.app/admin-login.html)
+## [Student Portal](https://coding-protocol-edf72.web.app/)
+## [Admin Portal](https://coding-protocol-edf72.web.app/admin-login.html)
 
 > **🔐 Admin Access Credentials (For Evaluation)**
 > * **Username:** `admin`
