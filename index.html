@@ -2,184 +2,255 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Coding Protocol</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coding Protocol — Internship & Placement Platform</title>
   <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<video class="video-bg" autoplay muted loop playsinline>
-  <source src="background.mp4" type="video/mp4">
-</video>
-<div class="overlay"></div>
+<div id="toast-container"></div>
+<button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" data-tip="Back to top">↑</button>
 
-<div class="content">
+<!-- ONBOARDING OVERLAY -->
+<div class="onboarding-overlay" id="onboarding" style="display:none;">
+  <div class="onboarding-card">
+    <div style="font-size:2.2rem;margin-bottom:12px;">🚀</div>
+    <h2>Welcome to Coding Protocol</h2>
+    <p class="ob-sub">Your all-in-one internship and placement hub. Three steps to your dream internship:</p>
+    <div class="onboarding-steps">
+      <div class="onboarding-step">
+        <div class="step-num">1</div>
+        <p>Upload your PDF resume for instant skill analysis</p>
+      </div>
+      <div class="onboarding-step">
+        <div class="step-num">2</div>
+        <p>Browse roles and check your match score</p>
+      </div>
+      <div class="onboarding-step">
+        <div class="step-num">3</div>
+        <p>Apply and track your full hiring pipeline</p>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="btn btn-primary btn-full" style="padding:13px;" onclick="dismissOnboarding()">Get Started →</button>
+      <a href="profile.html" class="btn btn-ghost btn-full" onclick="dismissOnboarding()">Set up my profile first</a>
+    </div>
+    <p style="margin-top:14px;font-size:.76rem;color:var(--txt-3);">Press <kbd style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:3px;padding:1px 6px;">/</kbd> to focus search · <kbd style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:3px;padding:1px 6px;">Esc</kbd> to close modals</p>
+  </div>
+</div>
 
-  <header>
-    <h1>🎓 Coding Protocol</h1>
-    <p>Smart Internship & Placement Platform</p>
+<!-- NAV -->
+<nav class="top-nav">
+  <a href="index.html" class="nav-brand"><span class="brand-dot"></span>Coding Protocol</a>
+  <div class="nav-links">
+    <a href="profile.html" class="btn btn-ghost btn-sm" data-tip="Your profile">Profile</a>
+    <a href="dashboard.html" class="btn btn-ghost btn-sm">My Applications</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- HERO -->
+  <header class="site-header">
+    <div class="eyebrow">✦ Hack'Vento 2026 · GDGoC IET DAVV</div>
+    <h1>Coding Protocol</h1>
+    <p class="sub">Find internships, analyse your resume, and track every step of your journey.</p>
   </header>
 
-  
-  <section class="resume">
-    <h2>Upload Resume</h2>
-
-    <input type="file" id="resumeFile" accept=".pdf,.doc,.docx">
-
-    <p id="result">No resume uploaded</p>
-
-    <button id="applyBtn" onclick="apply()" style="display:none;">
-      Apply for Internship
-    </button>
-  </section>
-
-
-  <section class="dashboard">
-    <h2>Available Opportunities</h2>
-
-    <div class="cards">
-
-      <div class="card">
-        <h3>Web Developer Intern</h3>
-        <p>Company: Google</p>
-        <p>Eligibility: CSE / IT</p>
-        <p>Stipend: ₹20,000</p>
-        <span class="verified">✔ Verified</span>
-        <button onclick="checkMatch('Web Developer Intern')">Check Resume Match</button>
+  <!-- RESUME ANALYSIS -->
+  <section class="glass panel">
+    <div class="section-label">Resume Analysis</div>
+    <div class="quick-apply-banner" id="quickBanner">
+      <span>Previous details found — form will be pre-filled when you apply.</span>
+      <button class="btn btn-sky btn-sm" onclick="clearQuickApply()">Clear</button>
+    </div>
+    <div class="upload-area" id="uploadArea" onclick="document.getElementById('resumeFile').click()">
+      <label class="upload-label">
+        <span class="ico">📎</span>
+        <span class="l1">Drop your PDF here or <span>browse</span></span>
+        <span class="l2">PDF only · Real text extraction · Drag and drop supported</span>
+      </label>
+      <input type="file" id="resumeFile" accept=".pdf">
+    </div>
+    <div class="analysis-box" id="analysisBox">
+      <div class="score-row">
+        <div class="score-circle" id="scoreCircle">—</div>
+        <div class="score-info">
+          <h4 id="scoreTitle">Analysing…</h4>
+          <p id="scoreDesc"></p>
+        </div>
       </div>
-
-      <div class="card">
-        <h3>Backend Developer Intern</h3>
-        <p>Company: Amazon</p>
-        <p>Eligibility: CSE / IT</p>
-        <p>Stipend: ₹22,000</p>
-        <span class="verified">✔ Verified</span>
-        <button onclick="checkMatch('Backend Developer Intern')">Check Resume Match</button>
+      <div class="skill-gap-section">
+        <h5>Skills Detected</h5>
+        <div class="gap-chips" id="detectedSkills"></div>
       </div>
-
-      <div class="card">
-        <h3>Data Analyst Intern</h3>
-        <p>Company: Microsoft</p>
-        <p>Eligibility: Any Branch</p>
-        <p>Stipend: ₹15,000</p>
-        <span class="verified">✔ Verified</span>
-        <button onclick="checkMatch('Data Analyst Intern')">Check Resume Match</button>
+      <div class="skill-gap-section" id="gapSection" style="display:none;">
+        <h5>Missing Skills for Selected Role</h5>
+        <div class="gap-chips" id="missingSkills"></div>
+        <div style="height:10px;"></div>
+        <h5>Recommended Resources</h5>
+        <div class="resource-list" id="resourceList"></div>
       </div>
-
-      <div class="card">
-        <h3>Machine Learning Intern</h3>
-        <p>Company: IBM</p>
-        <p>Eligibility: CSE / IT / AI</p>
-        <p>Stipend: ₹25,000</p>
-        <span class="verified">✔ Verified</span>
-        <button onclick="checkMatch('Machine Learning Intern')">Check Resume Match</button>
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button id="applyBtn" class="btn btn-sky" onclick="openForm()" style="display:none;">
+          Continue to Application →
+        </button>
       </div>
-
-      <div class="card">
-        <h3>Mechanical Design Intern</h3>
-        <p>Company: Tata Motors</p>
-        <p>Eligibility: Mechanical</p>
-        <p>Stipend: ₹12,000</p>
-        <span class="verified">✔ Verified</span>
-        <button onclick="checkMatch('Mechanical Design Intern')">Check Resume Match</button>
-      </div>
-
-      <div class="card">
-        <h3>Electrical Engineer Intern</h3>
-        <p>Company: L&T</p>
-        <p>Eligibility: Electrical</p>
-        <p>Stipend: ₹14,000</p>
-        <span class="verified">✔ Verified</span>
-        <button onclick="checkMatch('Electrical Engineer Intern')">Check Resume Match</button>
-      </div>
-
-      <div class="card">
-        <h3>UI/UX Designer Intern</h3>
-        <p>Company: Adobe</p>
-        <p>Eligibility: Any Branch</p>
-        <p>Stipend: ₹18,000</p>
-        <span class="verified">✔ Verified</span>
-        <button onclick="checkMatch('UI/UX Designer Intern')">Check Resume Match</button>
-      </div>
-
-      <div class="card">
-        <h3>Digital Marketing Intern</h3>
-        <p>Company: Flipkart</p>
-        <p>Eligibility: Any Branch</p>
-        <p>Stipend: ₹10,000</p>
-        <span class="verified">✔ Verified</span>
-        <button onclick="checkMatch('Digital Marketing Intern')">Check Resume Match</button>
-      </div>
-
-      <div class="card">
-        <h3>Business Analyst Intern</h3>
-        <p>Company: Deloitte</p>
-        <p>Eligibility: Any Branch</p>
-        <p>Stipend: ₹16,000</p>
-        <span class="verified">✔ Verified</span>
-        <button onclick="checkMatch('Business Analyst Intern')">Check Resume Match</button>
-      </div>
-
-      <div class="card">
-        <h3>HR Intern</h3>
-        <p>Company: Infosys</p>
-        <p>Eligibility: Any Branch</p>
-        <p>Stipend: ₹9,000</p>
-        <span class="verified">✔ Verified</span>
-        <button onclick="checkMatch('HR Intern')">Check Resume Match</button>
-      </div>
-
     </div>
   </section>
 
+  <!-- PROGRESS TRACKER -->
+  <section class="glass panel" id="progressSection" style="display:none;">
+    <div class="section-label">Application Progress</div>
+    <div class="progress-tracker" id="progressTracker">
+      <div class="progress-step" id="step1"><div class="step-dot">📎</div><span class="step-label">Resume<br>Uploaded</span></div>
+      <div class="progress-step" id="step2"><div class="step-dot">🔍</div><span class="step-label">Match<br>Checked</span></div>
+      <div class="progress-step" id="step3"><div class="step-dot">📝</div><span class="step-label">Applied</span></div>
+      <div class="progress-step" id="step4"><div class="step-dot">⏳</div><span class="step-label">Under Review</span></div>
+      <div class="progress-step" id="step5"><div class="step-dot">🎉</div><span class="step-label">Decision</span></div>
+    </div>
+  </section>
 
-  <form class="resume" id="applyForm" style="display:none;">
-  <h2>Student Details</h2>
+  <!-- FEATURED BANNER -->
+  <div class="featured-banner" id="featuredBanner">
+    <span class="fb-label">⭐ Featured</span>
+    <div class="fb-jobs" id="featuredJobs"></div>
+  </div>
 
-  <input id="name" placeholder="Full Name" required><br><br>
-  <input id="email" placeholder="Email" required><br><br>
-  <input id="collegeName" placeholder="College Name" required><br><br>
-  <input id="contact" placeholder="Contact Number" required><br><br>
-  <input id="linkedin" placeholder="LinkedIn Profile URL" required><br><br>
-  <input id="cgpa" placeholder="Current CGPA" required><br><br>
-  <input id="branch" placeholder="Branch" required><br><br>
-  <input id="year" placeholder="Year of Graduating" required><br><br>
+  <!-- SEARCH + FILTER -->
+  <div class="search-bar">
+    <div class="search-input-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="searchInput" type="text"
+        placeholder="Search role, company, skill… (press / to focus)"
+        oninput="renderJobs()">
+    </div>
+    <select class="filter-select" id="branchFilter" onchange="renderJobs()">
+      <option value="">All Branches</option>
+    </select>
+    <select class="filter-select" id="typeFilter" onchange="renderJobs()">
+      <option value="">All Types</option>
+      <option value="Remote">Remote</option>
+      <option value="Onsite">Onsite</option>
+      <option value="Hybrid">Hybrid</option>
+    </select>
+    <select class="filter-select" id="sortBy" onchange="renderJobs()">
+      <option value="default">Sort: Default</option>
+      <option value="stipend_hi">Stipend: High → Low</option>
+      <option value="stipend_lo">Stipend: Low → High</option>
+      <option value="deadline">Deadline: Soonest</option>
+      <option value="popularity">Most Popular</option>
+    </select>
+    <div class="stipend-range">
+      <span>₹</span>
+      <input type="range" id="stipendRange" min="0" max="30000" step="1000" value="30000"
+        oninput="document.getElementById('stipendVal').textContent=parseInt(this.value).toLocaleString('en-IN');renderJobs()">
+      <span id="stipendVal">30,000</span>
+    </div>
+    <span class="jobs-count" id="jobsCount">10 roles</span>
+  </div>
 
-  <button type="button" onclick="submitApplication()">Submit Application</button>
-</form>
+  <!-- CATEGORY TABS -->
+  <div class="category-tabs" id="categoryTabs"></div>
 
+  <!-- JOB CARDS -->
+  <section class="glass panel">
+    <div class="section-label">Open Roles</div>
+    <div class="cards-grid" id="cardsGrid">
+      <div class="skeleton-card"><div class="skeleton skeleton-line w-30"></div><div class="skeleton skeleton-line w-60"></div><div class="skeleton skeleton-line w-80"></div><div class="skeleton skeleton-line w-100"></div><div class="skeleton skeleton-line w-60"></div></div>
+      <div class="skeleton-card"><div class="skeleton skeleton-line w-30"></div><div class="skeleton skeleton-line w-60"></div><div class="skeleton skeleton-line w-80"></div><div class="skeleton skeleton-line w-100"></div><div class="skeleton skeleton-line w-60"></div></div>
+      <div class="skeleton-card"><div class="skeleton skeleton-line w-30"></div><div class="skeleton skeleton-line w-60"></div><div class="skeleton skeleton-line w-80"></div><div class="skeleton skeleton-line w-100"></div><div class="skeleton skeleton-line w-60"></div></div>
+      <div class="skeleton-card"><div class="skeleton skeleton-line w-30"></div><div class="skeleton skeleton-line w-60"></div><div class="skeleton skeleton-line w-80"></div><div class="skeleton skeleton-line w-100"></div><div class="skeleton skeleton-line w-60"></div></div>
+      <div class="skeleton-card"><div class="skeleton skeleton-line w-30"></div><div class="skeleton skeleton-line w-60"></div><div class="skeleton skeleton-line w-80"></div><div class="skeleton skeleton-line w-100"></div><div class="skeleton skeleton-line w-60"></div></div>
+      <div class="skeleton-card"><div class="skeleton skeleton-line w-30"></div><div class="skeleton skeleton-line w-60"></div><div class="skeleton skeleton-line w-80"></div><div class="skeleton skeleton-line w-100"></div><div class="skeleton skeleton-line w-60"></div></div>
+    </div>
+  </section>
 
-<div class="ai-chat">
-  <div class="ai-header">🤖 Career AI Tutor</div>
+  <!-- SIMILAR JOBS (shown after match check) -->
+  <section class="glass panel" id="similarSection" style="display:none;">
+    <div class="section-label">Similar Roles You Might Like</div>
+    <div class="similar-strip" id="similarStrip"></div>
+  </section>
+
+  <!-- APPLICATION FORM -->
+  <section class="glass panel" id="applyForm" style="display:none;">
+    <div class="section-label">Application Form</div>
+    <p style="font-size:.875rem;color:var(--txt-2);margin-bottom:4px;">
+      Applying for <strong id="roleLabel" style="color:var(--sky);"></strong>
+    </p>
+    <p id="appLimitMsg" style="font-size:.8rem;color:var(--txt-3);margin-bottom:12px;"></p>
+    <div class="draft-indicator" id="draftIndicator"><span>○</span><span>Draft not saved</span></div>
+    <div style="height:14px;"></div>
+    <div class="form-grid">
+      <div class="form-field"><label>Full Name *</label><input id="f-name" placeholder="Your full name" oninput="saveDraft()"></div>
+      <div class="form-field"><label>Email Address *</label><input id="f-email" type="email" placeholder="you@email.com" oninput="saveDraft()"></div>
+      <div class="form-field"><label>College Name *</label><input id="f-college" placeholder="Your institution" oninput="saveDraft()"></div>
+      <div class="form-field"><label>Contact Number *</label><input id="f-contact" placeholder="10-digit mobile number" oninput="saveDraft()"></div>
+      <div class="form-field" style="grid-column:1/-1;">
+        <label>LinkedIn Profile URL *</label>
+        <input id="f-linkedin" placeholder="https://www.linkedin.com/in/your-profile" oninput="saveDraft()">
+      </div>
+      <div class="form-field"><label>Branch *</label><input id="f-branch" placeholder="e.g. CSE, IT, ECE" oninput="saveDraft()"></div>
+      <div class="form-field"><label>Graduating Year *</label><input id="f-year" placeholder="e.g. 2026" oninput="saveDraft()"></div>
+      <div class="form-field"><label>CGPA *</label><input id="f-cgpa" type="number" step="0.01" min="0" max="10" placeholder="e.g. 8.5" oninput="saveDraft()"></div>
+      <div class="form-field" style="grid-column:1/-1;">
+        <label>Message to Recruiter <span style="color:var(--txt-3);font-weight:400;">(optional)</span></label>
+        <textarea id="f-message" placeholder="Briefly tell the recruiter why you are a great fit for this role…" oninput="saveDraft()"></textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:22px;flex-wrap:wrap;">
+      <button class="btn btn-primary" style="padding:13px 32px;" onclick="showPreview()">Preview Application →</button>
+      <button class="btn btn-ghost btn-sm" onclick="cancelForm()">Cancel</button>
+    </div>
+  </section>
+
+</div><!-- end .page -->
+
+<!-- APPLICATION PREVIEW MODAL -->
+<div class="modal-overlay" id="previewOverlay">
+  <div class="preview-modal-box">
+    <div class="preview-header">
+      <h2>Review Your Application</h2>
+      <p>Check all details before final submission</p>
+    </div>
+    <div class="preview-body" id="previewBody"></div>
+    <div class="preview-footer">
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('previewOverlay').classList.remove('active')">← Edit</button>
+      <button class="btn btn-primary" onclick="submitApplication()">Confirm & Submit →</button>
+    </div>
+  </div>
+</div>
+
+<!-- GENERIC CONFIRM MODAL -->
+<div id="popup" class="modal-overlay">
+  <div class="modal-box">
+    <h2 id="popupTitle"></h2>
+    <p id="popupMsg"></p>
+    <div class="modal-actions">
+      <button id="popupOk" class="btn btn-primary">OK</button>
+      <button id="popupCancel" class="btn btn-ghost" style="display:none;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI TUTOR -->
+<aside class="ai-chat">
+  <div class="ai-header"><span class="pulse-dot"></span>Career AI Tutor</div>
   <div class="ai-messages" id="aiMessages">
-    <div class="ai-bot">
-      Hi! I’m your personal career tutor .
-      just type resume,jobs,internship,interview and i will answer.
-    </div>
+    <div class="ai-bot">Hi! Ask me about resumes, internships, interviews, or skill gaps.</div>
   </div>
   <div class="ai-input">
-    <input type="text" id="aiInput" placeholder="Ask anything...">
+    <input id="aiInput" type="text" placeholder="Ask anything…"
+      onkeydown="if(event.key==='Enter') aiSend()">
     <button onclick="aiSend()">Send</button>
   </div>
-</div>
+</aside>
 
-<div id="userPopup" class="glass-overlay">
-  <div class="glass-modal">
-    <h2 id="userPopupTitle">Title</h2>
-    <p id="userPopupMsg">Message</p>
-
-    <div class="modal-actions">
-      <button id="userPopupYes">OK</button>
-      <button id="userPopupNo">Cancel</button>
-    </div>
-  </div>
-</div>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="three-bg.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 <script type="module" src="firebase.js"></script>
 <script type="module" src="script.js"></script>
 </body>
 </html>
-
-
-
-  

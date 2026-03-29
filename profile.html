@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile — Coding Protocol</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="three-bg.js"></script>
+</head>
+<body>
+<div id="toast-container"></div>
+<button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<nav class="top-nav">
+  <a href="index.html" class="nav-brand"><span class="brand-dot"></span>Coding Protocol</a>
+  <div class="nav-links">
+    <a href="dashboard.html" class="btn btn-ghost btn-sm">My Applications</a>
+    <a href="index.html" class="btn btn-sky btn-sm">Browse Jobs</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- Profile Hero -->
+  <div class="profile-hero" id="profileHero">
+    <div class="profile-avatar" id="avatarDisplay">?</div>
+    <div class="profile-info">
+      <div class="profile-name" id="profileNameDisplay">Your Name</div>
+      <div class="profile-meta" id="profileMetaDisplay">Set up your profile to get started</div>
+      <div class="profile-links" id="profileLinks"></div>
+    </div>
+    <div style="margin-left:auto;">
+      <span id="visibilityBadge" style="font-size:.75rem;font-weight:600;padding:4px 12px;border-radius:100px;background:var(--em-dim);color:var(--em);border:1px solid rgba(16,185,129,.28);cursor:pointer;" onclick="toggleVisibility()">🌐 Public</span>
+    </div>
+  </div>
+
+  <!-- Completeness Meter -->
+  <div class="completeness-card">
+    <div class="completeness-header">
+      <h4>Profile Completeness</h4>
+      <span class="completeness-pct" id="completenessValue" style="color:var(--sky);">0%</span>
+    </div>
+    <div class="completeness-bar"><div class="completeness-fill" id="completenessBar" style="width:0%"></div></div>
+    <div class="completeness-items" id="completenessItems"></div>
+  </div>
+
+  <!-- Two-column layout -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="profile-grid">
+
+    <!-- LEFT -->
+    <div>
+      <!-- Basic Info -->
+      <section class="glass panel" style="margin-bottom:16px;">
+        <div class="section-label">Basic Information</div>
+        <div class="form-grid">
+          <div class="form-field"><label>Full Name</label><input id="p-name" placeholder="Your full name" oninput="savePart('basic')"></div>
+          <div class="form-field"><label>Email</label><input id="p-email" type="email" placeholder="you@email.com" oninput="savePart('basic')"></div>
+          <div class="form-field"><label>Primary Contact</label><input id="p-phone1" placeholder="10-digit number" oninput="savePart('basic')"></div>
+          <div class="form-field"><label>Alternate Contact <span style="color:var(--txt-3);font-weight:400;">(optional)</span></label><input id="p-phone2" placeholder="Alternate number" oninput="savePart('basic')"></div>
+          <div class="form-field"><label>College / University</label><input id="p-college" placeholder="Institution name" oninput="savePart('basic')"></div>
+          <div class="form-field"><label>Branch</label><input id="p-branch" placeholder="e.g. CSE, ECE" oninput="savePart('basic')"></div>
+          <div class="form-field"><label>Graduating Year</label><input id="p-year" placeholder="e.g. 2026" oninput="savePart('basic')"></div>
+          <div class="form-field"><label>CGPA</label><input id="p-cgpa" type="number" step="0.01" min="0" max="10" placeholder="e.g. 8.5" oninput="savePart('basic')"></div>
+        </div>
+      </section>
+
+      <!-- Portfolio Links -->
+      <section class="glass panel" style="margin-bottom:16px;">
+        <div class="section-label">Portfolio Links</div>
+        <div class="form-grid">
+          <div class="form-field"><label>LinkedIn</label><input id="p-linkedin" placeholder="https://linkedin.com/in/…" oninput="savePart('links')"></div>
+          <div class="form-field"><label>GitHub</label><input id="p-github" placeholder="https://github.com/…" oninput="savePart('links')"></div>
+          <div class="form-field"><label>Portfolio Website</label><input id="p-website" placeholder="https://yoursite.com" oninput="savePart('links')"></div>
+          <div class="form-field"><label>LeetCode / CP Profile</label><input id="p-leetcode" placeholder="https://leetcode.com/u/…" oninput="savePart('links')"></div>
+        </div>
+      </section>
+
+      <!-- Education History -->
+      <section class="glass panel" style="margin-bottom:16px;">
+        <div class="section-label">Education History</div>
+        <div class="form-grid">
+          <div class="form-field"><label>10th Board</label><input id="ed-10-board" placeholder="e.g. CBSE" oninput="savePart('education')"></div>
+          <div class="form-field"><label>10th Percentage / CGPA</label><input id="ed-10-score" placeholder="e.g. 92%" oninput="savePart('education')"></div>
+          <div class="form-field"><label>12th Board</label><input id="ed-12-board" placeholder="e.g. MP Board" oninput="savePart('education')"></div>
+          <div class="form-field"><label>12th Percentage</label><input id="ed-12-score" placeholder="e.g. 88%" oninput="savePart('education')"></div>
+          <div class="form-field" style="grid-column:1/-1;"><label>Current Degree</label><input id="ed-deg" placeholder="e.g. B.Tech Computer Science, GPA 8.5" oninput="savePart('education')"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- RIGHT -->
+    <div>
+      <!-- Skills -->
+      <section class="glass panel" style="margin-bottom:16px;">
+        <div class="section-label">Skills</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <input class="form-field input" id="skillInput" style="flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:var(--r-xs);padding:10px 13px;color:var(--txt);font-family:var(--f-body);font-size:.875rem;outline:none;" placeholder="Type a skill and press Enter" onkeydown="if(event.key==='Enter')addSkill()">
+          <button class="btn btn-sky btn-sm" onclick="addSkill()">+ Add</button>
+        </div>
+        <div id="skillsDisplay" style="display:flex;flex-wrap:wrap;gap:7px;min-height:32px;"></div>
+        <p style="font-size:.75rem;color:var(--txt-3);margin-top:10px;">Click a skill to remove it.</p>
+      </section>
+
+      <!-- Certifications -->
+      <section class="glass panel" style="margin-bottom:16px;">
+        <div class="section-label">Certifications</div>
+        <div id="certList" style="display:flex;flex-direction:column;gap:9px;margin-bottom:12px;"></div>
+        <button class="btn btn-ghost btn-sm" onclick="addCert()">+ Add Certification</button>
+      </section>
+
+      <!-- Projects -->
+      <section class="glass panel" style="margin-bottom:16px;">
+        <div class="section-label">Project Showcase</div>
+        <div id="projectList" style="display:flex;flex-direction:column;gap:12px;margin-bottom:12px;"></div>
+        <button class="btn btn-ghost btn-sm" onclick="addProject()">+ Add Project</button>
+      </section>
+
+      <!-- Resume timestamp -->
+      <section class="glass panel" style="margin-bottom:16px;">
+        <div class="section-label">Resume</div>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+          <button class="btn btn-sky" onclick="document.getElementById('resumeUpload').click()">Upload Resume (PDF)</button>
+          <input type="file" id="resumeUpload" accept=".pdf" style="display:none;" onchange="handleResumeUpload(this)">
+          <span id="resumeStatus" style="font-size:.82rem;color:var(--txt-3);">No resume on file</span>
+        </div>
+      </section>
+    </div>
+
+  </div><!-- end grid -->
+
+  <!-- Save bar -->
+  <div style="position:sticky;bottom:24px;display:flex;justify-content:center;z-index:40;">
+    <div style="background:var(--surface-hi);border:1px solid var(--border-hi);border-radius:var(--r-lg);padding:14px 28px;display:flex;gap:14px;align-items:center;backdrop-filter:var(--blur);box-shadow:var(--shadow-lg);">
+      <span id="saveBadge" style="font-size:.82rem;color:var(--txt-3);">All changes saved</span>
+      <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+    </div>
+  </div>
+
+</div>
+
+<div id="popup" class="modal-overlay">
+  <div class="modal-box">
+    <h2 id="popupTitle"></h2><p id="popupMsg"></p>
+    <div class="modal-actions">
+      <button id="popupOk" class="btn btn-primary">OK</button>
+      <button id="popupCancel" class="btn btn-ghost" style="display:none;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="firebase.js"></script>
+<script src="profile.js"></script>
+</body>
+</html>

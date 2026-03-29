@@ -2,32 +2,35 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login — Coding Protocol</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="login-bg">
-  <div class="blur-circle c1"></div>
-  <div class="blur-circle c2"></div>
+<div class="login-page">
+  <div class="glass login-card">
+    <p class="login-wordmark">Coding Protocol</p>
+    <p class="login-role">Admin Portal</p>
 
-  <div class="glass-card">
-    <h1>LOGIN</h1>
+    <span id="errorMsg" class="error-msg"></span>
 
-    <p id="errorMsg"></p>
-
-    <input id="adminUser" placeholder="Admin Username">
-
-    <div class="pass-box">
-      <input id="adminPass" type="password" placeholder="Admin Password">
-      <button id="eyeBtn">👁</button>
+    <div class="input-field">
+      <input id="adminUser" type="text" placeholder="Username" autocomplete="username">
+    </div>
+    <div class="input-field">
+      <input id="adminPass" type="password" placeholder="Password" autocomplete="current-password">
+      <button class="eye-btn" id="eyeBtn" type="button">👁</button>
     </div>
 
-    <button id="loginBtn">Login</button>
+    <button id="loginBtn" class="btn btn-primary btn-full" style="margin-top:10px;padding:13px;">
+      Sign In →
+    </button>
   </div>
 </div>
 
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="three-bg.js"></script>
+<script type="module" src="admin-login.js"></script>
 </body>
 </html>
-<script type="module" src="admin-login.js"></script>

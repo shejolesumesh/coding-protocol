@@ -1,100 +1,141 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — Coding Protocol</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="three-bg.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
-
 <body>
 
-<div class="admin-cartoons">
-  <img src="https://storyset.com/illustration/data-analysis/amico.svg" class="cartoon left">
-  <img src="https://storyset.com/illustration/business-decisions/pana.svg" class="cartoon right">
-</div>
+<div id="toast-container"></div>
 
-<div class="content">
+<nav class="admin-bar">
+  <div class="admin-brand">
+    <span class="brand-dot"></span>Coding Protocol
+    <span style="font-size:.7rem;font-weight:500;color:var(--txt-3);background:rgba(244,63,94,.12);border:1px solid rgba(244,63,94,.25);border-radius:4px;padding:2px 8px;margin-left:4px;">Admin</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span id="lastSyncTime" style="font-size:.75rem;color:var(--txt-3);"></span>
+    <button class="btn btn-sky btn-sm" onclick="loadApplications()">↻ Refresh</button>
+    <button class="btn btn-danger btn-sm" onclick="adminLogout()">Logout</button>
+  </div>
+</nav>
 
+<div class="admin-body">
+  <h1 class="admin-heading">Hiring Dashboard</h1>
+  <p class="admin-sub">Manage applications, update pipeline stages, and export data.</p>
 
-  <header class="admin-header">
-    <h1>📊 Admin Dashboard</h1>
-    <p>Student Internship & Placement Applications</p>
-  </header>
-  <button onclick="logoutAdmin()" style="
-  margin-bottom:15px;
-  padding:8px 14px;
-  border-radius:10px;
-  background:#334155;
-  color:white;
-  font-weight:bold;
-  border:none;
-  cursor:pointer;
-">
-🚪 Logout
-</button>
+  <!-- Stat cards -->
+  <div class="stat-grid" id="statGrid">
+    <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value" id="st-total">—</div></div>
+    <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" id="st-pending">—</div></div>
+    <div class="stat-card"><div class="stat-label">Shortlisted</div><div class="stat-value" id="st-shortlisted">—</div></div>
+    <div class="stat-card"><div class="stat-label">Interview</div><div class="stat-value" id="st-interview">—</div></div>
+    <div class="stat-card"><div class="stat-label">Selected</div><div class="stat-value" id="st-selected">—</div></div>
+    <div class="stat-card"><div class="stat-label">Rejected</div><div class="stat-value" id="st-rejected">—</div></div>
+  </div>
 
+  <!-- Charts -->
+  <div class="charts-row">
+    <div class="chart-card"><h4>Pipeline Breakdown</h4><canvas id="pipelineChart" style="max-height:200px;"></canvas></div>
+    <div class="chart-card"><h4>Applications by Role</h4><canvas id="roleChart" style="max-height:200px;"></canvas></div>
+  </div>
 
-
-  <section class="dashboard">
-
-    <h2 class="table-title">📋 Student Application Records</h2>
-    <button onclick="clearApplications()" style="
-  margin-bottom:15px;
-  padding:10px 16px;
-  border-radius:10px;
-  background:#ef4444;
-  color:white;
-  font-weight:bold;
-  border:none;
-  cursor:pointer;
-">
-🗑 Clear All Applications
-</button>
-
-
-    <div class="table-wrapper">
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>Full Name</th>
-            <th>Email</th>
-            <th>College Name</th>
-            <th>contact number</th>
-            <th>linkdin ID</th>
-            <th>Branch</th>
-            <th>Year of graduating</th>
-            <th>CGPA</th>
-            <th>Applied Role</th>
-            <th>Date</th>
-            <th>Status</th>
-             <th>Actions</th>
-
-
-
-          </tr>
-        </thead>
-        <tbody id="appTable"></tbody>
-      </table>
+  <!-- Admin Activity Log -->
+  <div class="glass panel" style="margin-bottom:20px;">
+    <div class="section-label">Admin Activity Log</div>
+    <div class="activity-feed" id="adminActivityFeed">
+      <div class="activity-empty">No admin actions yet this session.</div>
     </div>
+  </div>
 
-  </section>
+  <!-- Table controls -->
+  <div class="table-controls">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <input class="filter-select" id="tableSearch" type="text" placeholder="Search name, email, role…" style="min-width:220px;padding:9px 13px;border-radius:var(--r-sm);" oninput="renderTable()">
+      <select class="filter-select" id="statusFilter" onchange="renderTable()">
+        <option value="">All Statuses</option>
+        <option value="pending">Pending</option>
+        <option value="shortlisted">Shortlisted</option>
+        <option value="interview">Interview</option>
+        <option value="selected">Selected</option>
+        <option value="rejected">Rejected</option>
+        <option value="withdrawn">Withdrawn</option>
+      </select>
+      <select class="filter-select" id="roleFilter" onchange="renderTable()"><option value="">All Roles</option></select>
+      <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;color:var(--txt-2);cursor:pointer;">
+        <input type="checkbox" id="topOnlyFilter" onchange="renderTable()"> Top candidates only
+      </label>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <span class="table-count" id="tableCount"></span>
+      <select class="filter-select" id="exportStatus" style="padding:7px 12px;">
+        <option value="all">Export: All</option>
+        <option value="pending">Export: Pending</option>
+        <option value="shortlisted">Export: Shortlisted</option>
+        <option value="interview">Export: Interview</option>
+        <option value="selected">Export: Selected</option>
+        <option value="rejected">Export: Rejected</option>
+      </select>
+      <button class="btn btn-success btn-sm" onclick="exportCSV()">⬇ CSV</button>
+    </div>
+  </div>
 
+  <!-- Bulk actions bar -->
+  <div class="bulk-bar" id="bulkBar">
+    <span id="bulkCount">0 selected</span>
+    <select class="filter-select" id="bulkStageSelect" style="padding:6px 10px;width:auto;">
+      <option value="">Move to stage…</option>
+      <option value="shortlisted">Shortlisted</option>
+      <option value="interview">Interview</option>
+      <option value="selected">Selected</option>
+      <option value="rejected">Rejected</option>
+    </select>
+    <button class="btn btn-sky btn-sm" onclick="bulkUpdateStage()">Apply to Selected</button>
+    <button class="btn btn-success btn-sm" onclick="bulkExport()">Export Selected</button>
+    <button class="btn btn-ghost btn-sm" onclick="clearSelection()">✕ Clear</button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table class="data-table" id="appTable">
+      <thead>
+        <tr>
+          <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"></th>
+          <th>Candidate</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th class="sortable" onclick="sortBy('cgpa')">CGPA ↕</th>
+          <th class="sortable" onclick="sortBy('matchScore')">Match ↕</th>
+          <th>Status</th>
+          <th>Tag</th>
+          <th class="sortable" onclick="sortBy('date')">Date ↕</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="appBody">
+        <tr><td colspan="10"><div class="empty-state"><div class="empty-icon">⏳</div><p>Loading applications…</p></div></td></tr>
+      </tbody>
+    </table>
+  </div>
 </div>
-<div id="globalModal" class="glass-overlay">
-  <div class="glass-modal">
-    <h2 id="modalTitle">Title</h2>
-    <p id="modalMessage">Message</p>
 
+<!-- Confirm modal -->
+<div id="popup" class="modal-overlay">
+  <div class="modal-box">
+    <h2 id="popupTitle"></h2><p id="popupMsg"></p>
     <div class="modal-actions">
-      <button id="modalOk">OK</button>
-      <button id="modalCancel" style="display:none;">Cancel</button>
+      <button id="popupOk" class="btn btn-primary">OK</button>
+      <button id="popupCancel" class="btn btn-ghost" style="display:none;">Cancel</button>
     </div>
   </div>
 </div>
 
+<script type="module" src="firebase.js"></script>
 <script type="module" src="admin.js"></script>
 </body>
 </html>
-
-

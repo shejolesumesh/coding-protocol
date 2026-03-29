@@ -1,24 +1,30 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const eyeBtn = document.getElementById("eyeBtn");
-  const pass = document.getElementById("adminPass");
-  const loginBtn = document.getElementById("loginBtn");
-  const errorMsg = document.getElementById("errorMsg");
-  const adminUser = document.getElementById("adminUser");
+document.addEventListener('DOMContentLoaded', () => {
+  const userEl   = document.getElementById('adminUser');
+  const passEl   = document.getElementById('adminPass');
+  const loginBtn = document.getElementById('loginBtn');
+  const eyeBtn   = document.getElementById('eyeBtn');
+  const errEl    = document.getElementById('errorMsg');
 
-  eyeBtn.onclick = () => {
-    pass.type = pass.type === "password" ? "text" : "password";
-  };
+  eyeBtn.addEventListener('click', () => {
+    passEl.type = passEl.type === 'password' ? 'text' : 'password';
+  });
+  [userEl, passEl].forEach(el =>
+    el.addEventListener('keydown', e => { if (e.key === 'Enter') login(); })
+  );
+  loginBtn.addEventListener('click', login);
 
-  loginBtn.onclick = () => {
-    const user = adminUser.value.trim();
-    const pwd = pass.value.trim();
-
-    if (user === "admin" && pwd === "admin123") {
-      sessionStorage.setItem("adminLoggedIn", "true");
-      window.location.href = "admin.html";
+  function login() {
+    errEl.textContent = '';
+    const u = userEl.value.trim();
+    const p = passEl.value.trim();
+    if (!u || !p) { errEl.textContent = 'Please enter username and password.'; return; }
+    if (u === 'admin' && p === 'admin123') {
+      sessionStorage.setItem('adminLoggedIn', 'true');
+      window.location.href = 'admin.html';
     } else {
-      errorMsg.textContent = "Username or password is wrong";
+      errEl.textContent = 'Invalid username or password.';
+      passEl.value = '';
+      passEl.focus();
     }
-  };
+  }
 });
-

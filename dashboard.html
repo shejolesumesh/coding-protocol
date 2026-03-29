@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Applications — Coding Protocol</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="three-bg.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div id="toast-container"></div>
+<button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" data-tip="Back to top">↑</button>
+
+<nav class="top-nav">
+  <a href="index.html" class="nav-brand"><span class="brand-dot"></span>Coding Protocol</a>
+  <div class="nav-links">
+    <a href="profile.html" class="btn btn-ghost btn-sm">Profile</a>
+    <a href="index.html" class="btn btn-sky btn-sm">Browse Jobs</a>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="dash-header">
+    <div>
+      <h1 class="dash-heading">My Applications</h1>
+      <p class="dash-sub">Track every stage of your hiring journey.</p>
+    </div>
+    <div class="dash-email-row">
+      <input class="dash-email-input" id="emailInput" type="email" placeholder="Enter your email to load applications">
+      <button class="btn btn-primary" onclick="loadDashboard()">Load</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stat-grid" id="statGrid" style="display:none;">
+    <div class="stat-card"><div class="stat-label">Total Applied</div><div class="stat-value" id="st-total">0</div></div>
+    <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" id="st-pending">0</div></div>
+    <div class="stat-card"><div class="stat-label">Shortlisted</div><div class="stat-value" id="st-shortlisted">0</div></div>
+    <div class="stat-card"><div class="stat-label">Interview</div><div class="stat-value" id="st-interview">0</div></div>
+    <div class="stat-card"><div class="stat-label">Selected</div><div class="stat-value" id="st-selected">0</div></div>
+    <div class="stat-card"><div class="stat-label">Rejected</div><div class="stat-value" id="st-rejected">0</div></div>
+  </div>
+
+  <!-- Success rate + Charts -->
+  <div class="charts-row" id="chartsRow" style="display:none;">
+    <div class="chart-card">
+      <h4>Application Success Rate</h4>
+      <div style="margin-bottom:10px;" id="successRateDisplay"></div>
+      <canvas id="statusChart" style="max-height:190px;"></canvas>
+    </div>
+    <div class="chart-card">
+      <h4>Role-wise Breakdown</h4>
+      <canvas id="roleChart" style="max-height:190px;"></canvas>
+    </div>
+  </div>
+
+  <!-- Applications table -->
+  <section class="glass panel" id="appSection" style="display:none;">
+    <div class="section-label">Application History</div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Role</th>
+            <th>Company</th>
+            <th>Match</th>
+            <th>Status</th>
+            <th>Pipeline</th>
+            <th>Applied On</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="appBody">
+          <tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📋</div><p>Enter your email above to see your applications.</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Activity feed + saved -->
+  <div class="charts-row" id="feedRow" style="display:none;">
+    <div class="glass panel" style="margin-bottom:0;">
+      <div class="section-label">Activity Feed</div>
+      <div class="activity-feed" id="activityFeed"></div>
+    </div>
+    <div class="glass panel" style="margin-bottom:0;">
+      <div class="section-label">Saved Jobs</div>
+      <div id="savedJobsList" style="display:flex;flex-direction:column;gap:10px;"></div>
+    </div>
+  </div>
+
+  <!-- Application tips -->
+  <section class="glass panel" style="margin-top:20px;">
+    <div class="section-label">Application Tips</div>
+    <div class="tips-grid" id="tipsGrid"></div>
+  </section>
+</div>
+
+<!-- Withdraw modal -->
+<div id="popup" class="modal-overlay">
+  <div class="modal-box">
+    <h2 id="popupTitle"></h2><p id="popupMsg"></p>
+    <div class="modal-actions">
+      <button id="popupOk" class="btn btn-primary">Confirm</button>
+      <button id="popupCancel" class="btn btn-ghost">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="firebase.js"></script>
+<script type="module" src="dashboard.js"></script>
+</body>
+</html>

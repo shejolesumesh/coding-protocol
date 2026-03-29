@@ -1,508 +1,740 @@
-import { collection, addDoc } from
-"https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
-import { db } from "./firebase.js";
+/**
+ * script.js — Student Portal v4
+ * Onboarding · categories · featured banner · skeleton→cards
+ * drag-drop resume · draft auto-save · preview modal
+ * similar jobs · recently viewed · keyboard shortcuts · back-to-top
+ * app limit · quick apply · quota enforcement · duplicate prevention
+ */
 
+import { collection, addDoc, getDocs, query, where } from
+  'https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js';
+import { db } from './firebase.js';
+import { JOBS, BRANCHES, CATEGORIES, APP_LIMIT, DIFFICULTY_META } from './jobs-data.js';
 
-let selectedRole = "";
-let resumeUploaded = false;
-let lastMatchScore = 0;
+/* ── State ─────────────────────────────────── */
+let selectedJob    = null;
+let resumeText     = '';
+let resumeAnalysis = null;
+let savedJobs      = JSON.parse(localStorage.getItem('cp_saved')  || '[]');
+let recentlyViewed = JSON.parse(localStorage.getItem('cp_recent') || '[]');
+let progressState  = parseInt(localStorage.getItem('cp_progress') || '0');
+let popularityMap  = {};
+let activeCategory = 'All';
+let draftTimer     = null;
 
+/* ── Boot ─────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', async () => {
+  // First-visit onboarding
+  if (!localStorage.getItem('cp_onboarded')) {
+    document.getElementById('onboarding').style.display = 'flex';
+  }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const resumeInput = document.getElementById("resumeFile");
+  // Quick apply banner
+  if (localStorage.getItem('cp_last_form')) {
+    document.getElementById('quickBanner').classList.add('visible');
+  }
 
-  resumeInput.addEventListener("change", () => {
-    resumeUploaded = true;
+  // Restore draft into form fields
+  const draft = localStorage.getItem('cp_draft');
+  if (draft) {
+    try {
+      const d = JSON.parse(draft);
+      ['name','email','college','contact','linkedin','branch','year','cgpa','message'].forEach(k => {
+        const el = document.getElementById(`f-${k}`); if (el && d[k]) el.value = d[k];
+      });
+    } catch {}
+  }
 
-    document.getElementById("result").innerText =
-      "📄 Resume uploaded. Select an internship and check resume match (Minimum 75% required).";
+  populateBranchFilter();
+  buildCategoryTabs();
+  await loadPopularityMap();
+  renderFeatured();
 
-    document.getElementById("applyBtn").style.display = "none";
-    document.getElementById("applyForm").style.display = "none";
+  // Show skeleton 0.6s then render real cards
+  setTimeout(renderJobs, 600);
+  restoreProgress();
+
+  // Back-to-top
+  window.addEventListener('scroll', () => {
+    document.getElementById('backToTop')?.classList.toggle('visible', window.scrollY > 400);
   });
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', e => {
+    if (['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
+    if (e.key === '/') { e.preventDefault(); document.getElementById('searchInput').focus(); }
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+      document.getElementById('onboarding').style.display = 'none';
+    }
+  });
+
+  // Drag-and-drop on upload area
+  const ua = document.getElementById('uploadArea');
+  ua.addEventListener('dragover',  e => { e.preventDefault(); ua.classList.add('drag-over'); });
+  ua.addEventListener('dragleave', () => ua.classList.remove('drag-over'));
+  ua.addEventListener('drop', e => {
+    e.preventDefault(); ua.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f) handleResumeFile(f);
+  });
+
+  document.getElementById('resumeFile').addEventListener('change', e => {
+    if (e.target.files[0]) handleResumeFile(e.target.files[0]);
+  });
+
+  // Handle pending job from job.html redirect
+  const pending = sessionStorage.getItem('cp_pending_job');
+  if (pending) {
+    sessionStorage.removeItem('cp_pending_job');
+    selectedJob = JOBS.find(j => j.id === pending);
+    if (selectedJob && resumeText) runMatchAnalysis();
+    else if (selectedJob) {
+      toast(`Upload your resume to apply for ${selectedJob.title}`, 'info');
+      document.querySelector('.upload-area').scrollIntoView({ behavior: 'smooth' });
+    }
+  }
 });
 
-function checkMatch(role) {
-  if (!resumeUploaded) {
-    showUserPopup(
-  "📄 Resume Required",
-  "Please upload your resume before applying."
-);
-return;
-  }
+/* ── Onboarding ───────────────────────────── */
+window.dismissOnboarding = function () {
+  document.getElementById('onboarding').style.display = 'none';
+  localStorage.setItem('cp_onboarded', '1');
+};
 
-  const resumeFile = document.getElementById("resumeFile").files[0];
-  if (!resumeFile) {
-  showUserPopup(
-    "❌ Resume Not Found",
-    "Please upload a valid resume file."
-  );
-  return;
+/* ── Category tabs ────────────────────────── */
+function buildCategoryTabs() {
+  const wrap = document.getElementById('categoryTabs');
+  if (!wrap) return;
+  CATEGORIES.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = `cat-tab${cat === activeCategory ? ' active' : ''}`;
+    btn.textContent = cat;
+    btn.onclick = () => {
+      activeCategory = cat;
+      document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderJobs();
+    };
+    wrap.appendChild(btn);
+  });
+}
 
+/* ── Featured banner ──────────────────────── */
+function renderFeatured() {
+  const el = document.getElementById('featuredJobs');
+  if (!el) return;
+  JOBS.filter(j => j.featured).forEach(j => {
+    const chip = document.createElement('div');
+    chip.className = 'featured-chip';
+    chip.innerHTML = `<strong>${j.company}</strong> · ${j.title} · ₹${j.stipend.toLocaleString('en-IN')}/mo`;
+    chip.onclick = () => quickSelectJob(j.id);
+    el.appendChild(chip);
+  });
+}
 
-  }
+window.quickSelectJob = function (id) {
+  selectedJob = JOBS.find(j => j.id === id);
+  if (!selectedJob) return;
+  if (!resumeText) { toast('Upload your resume first to check match.', 'info'); return; }
+  runMatchAnalysis();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
 
-  selectedRole = role;
+/* ── Popularity map ───────────────────────── */
+async function loadPopularityMap() {
+  try {
+    const snap = await getDocs(collection(db, 'applications'));
+    snap.forEach(d => {
+      const r = d.data().role;
+      if (r) popularityMap[r] = (popularityMap[r] || 0) + 1;
+    });
+  } catch { /* offline – graceful */ }
+}
 
-  const resumeSizeKB = resumeFile.size / 1024;
-  const resumeName = resumeFile.name.toLowerCase();
+/* ── Branch filter ────────────────────────── */
+function populateBranchFilter() {
+  const sel = document.getElementById('branchFilter');
+  if (!sel) return;
+  BRANCHES.filter(b => b !== 'Any').forEach(b => {
+    const o = document.createElement('option'); o.value = b; o.textContent = b;
+    sel.appendChild(o);
+  });
+}
 
+/* ── Job cards ────────────────────────────── */
+window.renderJobs = function () {
+  const q       = document.getElementById('searchInput')?.value.trim().toLowerCase() || '';
+  const branch  = document.getElementById('branchFilter')?.value || '';
+  const type    = document.getElementById('typeFilter')?.value || '';
+  const sort    = document.getElementById('sortBy')?.value || 'default';
+  const maxStip = parseInt(document.getElementById('stipendRange')?.value || 30000);
+  const today   = new Date(); today.setHours(0,0,0,0);
 
-  if (resumeSizeKB < 40) {
-    lastMatchScore = 0;
-    document.getElementById("result").innerText =
-      "❌ Resume looks empty or too small. Please upload a proper resume.";
-    document.getElementById("applyBtn").style.display = "none";
-    document.getElementById("applyForm").style.display = "none";
+  let list = JOBS.filter(j => {
+    if (activeCategory !== 'All' && j.category !== activeCategory) return false;
+    if (q) {
+      const hay = [j.title, j.company, ...(j.skills||[]), ...(j.keywords||[])].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (branch && !j.branch.includes(branch) && !j.branch.includes('Any')) return false;
+    if (type && j.type !== type) return false;
+    if (j.stipend > maxStip) return false;
+    return true;
+  });
+
+  if (sort === 'stipend_hi') list.sort((a,b) => b.stipend - a.stipend);
+  if (sort === 'stipend_lo') list.sort((a,b) => a.stipend - b.stipend);
+  if (sort === 'deadline')   list.sort((a,b) => new Date(a.deadline) - new Date(b.deadline));
+  if (sort === 'popularity') list.sort((a,b) => (popularityMap[b.title]||0) - (popularityMap[a.title]||0));
+
+  const countEl = document.getElementById('jobsCount');
+  if (countEl) countEl.textContent = `${list.length} role${list.length !== 1 ? 's' : ''}`;
+
+  const grid = document.getElementById('cardsGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  if (!list.length) {
+    grid.innerHTML = '<div class="no-jobs">No roles match your filters. Try broadening your search.</div>';
     return;
   }
 
+  list.forEach(job => {
+    const dl       = new Date(job.deadline);
+    const daysLeft = Math.ceil((dl - today) / 86400000);
+    const expired  = daysLeft < 0;
+    const urgent   = !expired && daysLeft <= 5;
+    const isSaved  = savedJobs.includes(job.id);
+    const isRecent = recentlyViewed.includes(job.id);
+    const count    = popularityMap[job.title] || 0;
+    const quota    = job.quota || 10;
+    const fillPct  = Math.min(Math.round((count / quota) * 100), 100);
+    const isFull   = count >= quota;
 
-  const roleHints = {
-    "Web Developer Intern": ["web", "frontend", "developer"],
-    "Backend Developer Intern": ["backend", "server", "api"],
-    "Data Analyst Intern": ["data", "analytics", "analyst"],
-    "Machine Learning Intern": ["ml", "ai", "machine"],
-    "Mechanical Design Intern": ["mechanical", "design"],
-    "Electrical Engineer Intern": ["electrical", "power"],
-    "UI/UX Designer Intern": ["ui", "ux", "design"],
-    "Digital Marketing Intern": ["marketing", "seo"],
-    "Business Analyst Intern": ["business", "analysis"],
-    "HR Intern": ["hr", "human"]
-  };
+    const dlText = expired ? 'Closed'
+      : urgent ? `⚡ ${daysLeft}d left`
+      : `Closes ${dl.toLocaleDateString('en-IN', { day:'numeric', month:'short' })}`;
 
-  const hints = roleHints[role] || [];
-  let roleRelevant = false;
+    const popBadge = count === 0
+      ? `<span class="popularity-badge low">Low competition</span>`
+      : count >= Math.floor(quota * 0.6)
+        ? `<span class="popularity-badge">🔥 ${count} applied</span>`
+        : `<span class="popularity-badge low">${count} applied</span>`;
 
-  hints.forEach(hint => {
-    if (resumeName.includes(hint)) roleRelevant = true;
+    // Difficulty badge
+    const diff = (DIFFICULTY_META && DIFFICULTY_META[job.difficulty]) || { color:'var(--sky)', bg:'var(--sky-dim)', border:'var(--border-hi)' };
+    const diffBadge = job.difficulty
+      ? `<span style="font-size:.7rem;font-weight:700;padding:2px 9px;border-radius:100px;background:${diff.bg};color:${diff.color};border:1px solid ${diff.border};">${job.difficulty}</span>`
+      : '';
+
+    // Tags
+    const tagsHTML = (job.tags || []).slice(0,3).map(t =>
+      `<span style="font-size:.68rem;font-weight:600;color:var(--violet);background:var(--vi-dim);border:1px solid rgba(167,139,250,.2);border-radius:4px;padding:2px 7px;">${t}</span>`
+    ).join('');
+
+    const card = document.createElement('article');
+    card.className = `card${isSaved ? ' saved' : ''}${(expired||isFull) ? ' expired' : ''}${isRecent ? ' recently-viewed' : ''}`;
+    card.innerHTML = `
+      ${popBadge}
+      ${job.isNew ? '<span class="new-badge">New</span>' : ''}
+      <span class="card-co">${job.company}</span>
+      <h3>${job.title}</h3>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <span class="verified-tag">✔ Verified</span>
+        <span class="type-tag ${job.type.toLowerCase()}">${job.type}</span>
+        ${diffBadge}
+      </div>
+      <div class="card-row"><strong>Branches:</strong> ${job.branch.slice(0,3).join(', ')}${job.branch.length>3?'…':''}</div>
+      <div class="card-stipend">₹${job.stipend.toLocaleString('en-IN')} / mo</div>
+      <div class="card-deadline ${urgent ? 'urgent' : ''}">${isFull ? '🔒 Quota Full' : dlText}</div>
+      <div class="quota-bar-wrap">
+        <div class="quota-bar">
+          <div class="quota-fill${fillPct>=100?' full':fillPct>=60?' warn':''}" style="width:${fillPct}%"></div>
+        </div>
+      </div>
+      <div class="card-skills">${(job.skills||[]).slice(0,3).map(s=>`<span class="skill-chip">${s}</span>`).join('')}</div>
+      ${tagsHTML ? `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;">${tagsHTML}</div>` : ''}
+      <div class="card-actions">
+        <a href="job.html?id=${job.id}" class="btn btn-ghost btn-sm" style="flex:.45;text-align:center;" onclick="trackView('${job.id}')">Details</a>
+        <button class="btn btn-primary btn-sm" style="flex:1;"
+          onclick="selectJob('${job.id}')"
+          ${(expired||isFull) ? 'disabled' : ''}>
+          ${expired ? 'Closed' : isFull ? 'Full' : 'Check Match'}
+        </button>
+        <button class="save-btn ${isSaved ? 'saved' : ''}"
+          onclick="toggleSave('${job.id}', event)"
+          title="${isSaved ? 'Unsave' : 'Save job'}">${isSaved ? '★' : '☆'}</button>
+      </div>
+    `;
+    grid.appendChild(card);
   });
 
+  // Show similar jobs if a job is already selected
+  if (selectedJob) renderSimilarJobs(selectedJob);
+};
 
-  let match = 0;
+/* ── Track recently viewed ────────────────── */
+window.trackView = function (id) {
+  if (!recentlyViewed.includes(id)) {
+    recentlyViewed.unshift(id);
+    recentlyViewed = recentlyViewed.slice(0, 5);
+    localStorage.setItem('cp_recent', JSON.stringify(recentlyViewed));
+  }
+};
 
+/* ── Save / unsave ────────────────────────── */
+window.toggleSave = function (id, e) {
+  e.stopPropagation();
+  const idx = savedJobs.indexOf(id);
+  if (idx === -1) { savedJobs.push(id); toast('Job saved ★', 'success'); }
+  else            { savedJobs.splice(idx, 1); toast('Job unsaved', 'info'); }
+  localStorage.setItem('cp_saved', JSON.stringify(savedJobs));
+  renderJobs();
+};
 
-  if (resumeSizeKB > 40) match += 30;
-  if (resumeSizeKB > 120) match += 20;
-  if (resumeSizeKB > 250) match += 15;
+/* ── Select job for match check ───────────── */
+window.selectJob = function (id) {
+  selectedJob = JOBS.find(j => j.id === id);
+  if (!selectedJob) return;
+  trackView(id);
+  if (!resumeText) {
+    toast('Upload your resume first.', 'warning');
+    document.querySelector('.upload-area').scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
+  runMatchAnalysis();
+};
 
-  
-  if (roleRelevant) match += 30;
-  else match += 15;
-
-  
-  match += Math.floor(Math.random() * 6); 
-
-  if (match > 95) match = 95;
-  lastMatchScore = match;
-
-  
-  if (match >= 75) {
-    document.getElementById("result").innerText =
-      `🤖 Resume Match for ${role}: ${match}% ✅ Eligible to apply`;
-    document.getElementById("applyBtn").style.display = "block";
-  } else {
-    document.getElementById("result").innerText =
-      `🤖 Resume Match for ${role}: ${match}% ❌ Resume needs improvement (Minimum 75% required)`;
-    document.getElementById("applyBtn").style.display = "none";
-    document.getElementById("applyForm").style.display = "none";
+/* ── Resume upload ────────────────────────── */
+async function handleResumeFile(file) {
+  if (file.type !== 'application/pdf') { toast('PDF files only.', 'error'); return; }
+  toast('Extracting resume text…', 'info');
+  try {
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+    let text = '';
+    for (let p = 1; p <= pdf.numPages; p++) {
+      const page = await pdf.getPage(p);
+      const c = await page.getTextContent();
+      text += c.items.map(i => i.str).join(' ') + '\n';
+    }
+    resumeText = text.toLowerCase();
+    const analysis = analyseResume(resumeText, null);
+    displayAnalysis(analysis, null);
+    advanceProgress(1);
+    document.getElementById('progressSection').style.display = 'block';
+    logActivity('📎', 'Resume uploaded and analysed');
+    toast('Resume analysed ✓', 'success');
+  } catch (err) {
+    console.error(err);
+    toast('Could not parse PDF. Make sure it is a text-based PDF, not a scan.', 'error');
   }
 }
 
+/* ── Skill detection ──────────────────────── */
+const SKILL_LIST = [
+  'javascript','typescript','react','vue','angular','node','nodejs','python','java','c++','c#','go','php',
+  'html','css','tailwind','bootstrap','sql','mysql','postgresql','mongodb','redis','graphql','rest','api',
+  'aws','azure','gcp','docker','kubernetes','linux','git','tensorflow','pytorch','scikit','keras',
+  'pandas','numpy','matplotlib','power bi','tableau','excel','matlab',
+  'figma','adobe xd','photoshop','ui','ux','autocad','solidworks','catia','ansys','plc','circuit',
+  'seo','sem','content','google analytics','communication','leadership','agile','scrum','jira',
+];
 
-function apply() {
-  if (lastMatchScore < 75) {
-  showUserPopup(
-    "❌ Not Eligible",
-    "Minimum 75% resume match is required to apply."
-  );
-  return;
+const RESOURCES = {
+  'react':     { label:'React — Official Docs',        url:'https://react.dev/' },
+  'node':      { label:'Node.js — Odin Project',       url:'https://www.theodinproject.com/' },
+  'nodejs':    { label:'Node.js — Full Course (YT)',   url:'https://www.youtube.com/watch?v=Oe421EPjeBE' },
+  'python':    { label:'Python — CS50 Harvard (free)', url:'https://cs50.harvard.edu/python/' },
+  'tensorflow':{ label:'TensorFlow — Tutorials',       url:'https://www.tensorflow.org/tutorials' },
+  'sql':       { label:'SQL — Mode Analytics',         url:'https://mode.com/sql-tutorial/' },
+  'docker':    { label:'Docker — Play with Docker',    url:'https://labs.play-with-docker.com/' },
+  'figma':     { label:'Figma — Learn Hub',            url:'https://help.figma.com/' },
+  'aws':       { label:'AWS — Free Tier',              url:'https://aws.amazon.com/free/' },
+  'git':       { label:'Git — Pro Git Book',           url:'https://git-scm.com/book/en/v2' },
+  'power bi':  { label:'Power BI — Microsoft Learn',   url:'https://learn.microsoft.com/power-bi/' },
+  'solidworks':{ label:'SolidWorks — Tutorial Playlist',url:'https://www.youtube.com/results?search_query=solidworks+tutorial' },
+  'seo':       { label:'SEO — Moz Beginners Guide',    url:'https://moz.com/beginners-guide-to-seo' },
+};
 
+function analyseResume(text, job) {
+  const detected = SKILL_LIST.filter(s => text.includes(s));
+  let score = 0;
+  if (text.includes('education'))                                   score += 10;
+  if (text.includes('experience') || text.includes('project'))     score += 15;
+  if (text.includes('skill'))                                       score += 10;
+  if (text.includes('certificate') || text.includes('certification')) score += 8;
+  if (text.includes('github') || text.includes('linkedin'))         score += 7;
+  score += Math.min(detected.length * 3, 30);
+  const nums = (text.match(/\d+%|\d+ (project|app|website|model|year|month)s?/g) || []).length;
+  score += Math.min(nums * 3, 15);
+  if (text.split(/\s+/).length > 200) score += 5;
+  score = Math.min(score, 100);
+
+  const missing = [];
+  if (job) {
+    const jobSkills = job.skills.map(s => s.toLowerCase());
+    jobSkills.forEach(s => { if (!detected.includes(s) && !text.includes(s)) missing.push(s); });
+    const overlap = jobSkills.filter(s => detected.includes(s) || text.includes(s)).length;
+    score = Math.min(score + Math.round((overlap / jobSkills.length) * 20), 100);
   }
-
-  const form = document.getElementById("applyForm");
-  form.style.display = "block";
-  form.scrollIntoView({ behavior: "smooth" });
+  return { score, detected, missing };
 }
 
+function displayAnalysis(analysis, job) {
+  document.getElementById('analysisBox').classList.add('visible');
+  const circle = document.getElementById('scoreCircle');
+  const title  = document.getElementById('scoreTitle');
+  const desc   = document.getElementById('scoreDesc');
 
-async function submitApplication() {
+  circle.textContent = `${analysis.score}%`;
+  circle.className   = `score-circle ${analysis.score >= 75 ? 'good' : analysis.score >= 50 ? 'ok' : 'poor'}`;
 
-  const name = document.getElementById("name").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const collegeName = document.getElementById("collegeName").value.trim();
-  const contact = document.getElementById("contact").value.trim();
-  const linkedin = document.getElementById("linkedin").value.trim();
-  const cgpa = document.getElementById("cgpa").value.trim();
-  const branch = document.getElementById("branch").value.trim();
-  const year = document.getElementById("year").value.trim();
+  if (analysis.score >= 75)      { title.textContent = job ? `Strong match — ${job.title}` : 'Strong Resume'; desc.textContent = 'Well-structured with good keyword coverage.'; }
+  else if (analysis.score >= 50) { title.textContent = job ? `Partial match — ${job.title}` : 'Needs improvement'; desc.textContent = 'Some key areas are missing. See recommendations below.'; }
+  else                           { title.textContent = 'Resume needs more work'; desc.textContent = 'Add more projects, skills, and measurable achievements.'; }
 
-  
-  if (!name || !email || !collegeName || !contact || !linkedin || !cgpa || !branch || !year) {
-    showUserPopup(
-  "⚠️ Incomplete Form",
-  "Please fill all the required fields."
-);
-return;
+  document.getElementById('detectedSkills').innerHTML = analysis.detected.length
+    ? analysis.detected.slice(0,20).map(s => `<span class="gap-chip present">${s}</span>`).join('')
+    : '<span style="color:var(--txt-3);font-size:.82rem;">No recognised skills found.</span>';
 
+  const gs = document.getElementById('gapSection');
+  if (job && analysis.missing.length) {
+    gs.style.display = 'block';
+    document.getElementById('missingSkills').innerHTML = analysis.missing.map(s => `<span class="gap-chip">${s}</span>`).join('');
+    const resources = analysis.missing.slice(0,5).map(s =>
+      RESOURCES[s.toLowerCase()] || { label:`Learn ${s}`, url:`https://www.youtube.com/results?search_query=${encodeURIComponent(s+' tutorial')}` }
+    );
+    document.getElementById('resourceList').innerHTML = resources.map(r =>
+      `<div class="resource-item"><span>${r.label}</span><a href="${r.url}" target="_blank" rel="noopener">Learn →</a></div>`
+    ).join('');
+  } else { gs.style.display = 'none'; }
+
+  document.getElementById('applyBtn').style.display = (job && analysis.score >= 75) ? 'inline-flex' : 'none';
+}
+
+/* ── Match analysis ───────────────────────── */
+function runMatchAnalysis() {
+  const analysis = analyseResume(resumeText, selectedJob);
+  resumeAnalysis = analysis;
+  displayAnalysis(analysis, selectedJob);
+  advanceProgress(2);
+  document.getElementById('progressSection').style.display = 'block';
+  logActivity('🔍', `Match check: ${selectedJob.title} at ${selectedJob.company} — ${analysis.score}%`);
+  toast(`${analysis.score}% match${analysis.score >= 75 ? ' — eligible ✓' : ' — below 75%'}`, analysis.score >= 75 ? 'success' : 'warning');
+  document.getElementById('analysisBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  renderSimilarJobs(selectedJob);
+}
+
+/* ── Similar jobs ─────────────────────────── */
+function renderSimilarJobs(job) {
+  const similar = JOBS.filter(j =>
+    j.id !== job.id && (j.category === job.category || j.branch.some(b => job.branch.includes(b)))
+  ).slice(0, 6);
+  if (!similar.length) return;
+  const sec = document.getElementById('similarSection');
+  const strip = document.getElementById('similarStrip');
+  if (!sec || !strip) return;
+  sec.style.display = 'block';
+  strip.innerHTML = similar.map(j => `
+    <div class="similar-pill" onclick="selectJob('${j.id}')">
+      <div class="sp-co">${j.company}</div>
+      <div class="sp-title">${j.title}</div>
+      <div class="sp-stip">₹${j.stipend.toLocaleString('en-IN')}/mo · ${j.type}</div>
+    </div>`).join('');
+}
+
+/* ── Open form ────────────────────────────── */
+window.openForm = async function () {
+  if (!resumeAnalysis || resumeAnalysis.score < 75) {
+    toast('Minimum 75% resume match required to apply.', 'warning'); return;
   }
 
-  
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    showUserPopup(
-  "📧 Invalid Email",
-  "Please enter a valid email address."
-);
-return;
-
+  // App limit check (query by email only, filter in JS)
+  const email = localStorage.getItem('cp_email');
+  if (email) {
+    try {
+      const snap = await getDocs(query(collection(db,'applications'), where('email','==',email)));
+      const active = snap.docs.filter(d => !['rejected','withdrawn'].includes(d.data().status)).length;
+      if (active >= APP_LIMIT) {
+        toast(`Limit reached — ${APP_LIMIT} active applications max. Go to My Applications and withdraw one first.`, 'warning');
+        document.getElementById('appLimitMsg').textContent = `⚠ ${active}/${APP_LIMIT} active slots used.`;
+        return;
+      }
+      document.getElementById('appLimitMsg').textContent = `${active} of ${APP_LIMIT} active slots used.`;
+    } catch (err) { console.warn('Limit check skipped:', err); }
   }
 
-  
-  if (!/^[6-9]\d{9}$/.test(contact)) {
-    showUserPopup(
-  "📱 Invalid Contact",
-  "Please enter a valid 10-digit contact number."
-);
-return;
+  document.getElementById('roleLabel').textContent = `${selectedJob.title} @ ${selectedJob.company}`;
+  const form = document.getElementById('applyForm');
+  form.style.display = 'block';
+  prefillForm();
+  form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
 
-  }
+/* ── Draft auto-save ──────────────────────── */
+window.saveDraft = function () {
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(() => {
+    const d = {};
+    ['name','email','college','contact','linkedin','branch','year','cgpa','message'].forEach(k => {
+      const el = document.getElementById(`f-${k}`); if (el) d[k] = el.value;
+    });
+    localStorage.setItem('cp_draft', JSON.stringify(d));
+    const ind = document.getElementById('draftIndicator');
+    if (ind) {
+      ind.className = 'draft-indicator saved';
+      ind.innerHTML = '<span>✓</span><span>Draft saved</span>';
+      setTimeout(() => { ind.className = 'draft-indicator'; ind.innerHTML = '<span>○</span><span>Draft not saved</span>'; }, 2500);
+    }
+  }, 800);
+};
 
-  
-  if (!linkedin.startsWith("https://www.linkedin.com/")) {
-    showUserPopup(
-  "🔗 Invalid LinkedIn",
-  "Please enter a valid LinkedIn profile URL."
-);
-return;
+/* ── Cancel form ──────────────────────────── */
+window.cancelForm = function () {
+  document.getElementById('applyForm').style.display = 'none';
+  toast('Application cancelled.', 'info');
+};
 
-  }
+/* ── Prefill from quick apply ─────────────── */
+function prefillForm() {
+  const stored = localStorage.getItem('cp_last_form') || localStorage.getItem('cp_draft');
+  if (!stored) return;
+  try {
+    const d = JSON.parse(stored);
+    ['name','email','college','contact','linkedin','branch','year','cgpa','message'].forEach(k => {
+      const el = document.getElementById(`f-${k}`); if (el && d[k]) el.value = d[k];
+    });
+  } catch {}
+}
 
-  
-  if (cgpa < 0 || cgpa > 10) {
-    showUserPopup(
-  "📊 Invalid CGPA",
-  "CGPA must be between 0 and 10."
-);
-return;
-
-  }
-
-  const application = {
-    name,
-    email,
-    collegeName,
-    contact,
-    linkedin,
-    cgpa,
-    branch,
-    year,
-    role: selectedRole,
-    date: new Date().toLocaleString(),
-    status: "pending"
-
+/* ── Application preview modal ────────────── */
+window.showPreview = function () {
+  const get = id => document.getElementById(id)?.value?.trim() || '';
+  const rows = {
+    'Role':        `${selectedJob?.title || '—'} @ ${selectedJob?.company || '—'}`,
+    'Full Name':   get('f-name'),
+    'Email':       get('f-email'),
+    'College':     get('f-college'),
+    'Contact':     get('f-contact'),
+    'LinkedIn':    get('f-linkedin'),
+    'Branch':      get('f-branch'),
+    'Grad Year':   get('f-year'),
+    'CGPA':        get('f-cgpa'),
+    'Match Score': resumeAnalysis ? `${resumeAnalysis.score}%` : '—',
+    'Message':     get('f-message') || '(none)',
   };
+
+  if (!rows['Full Name'] || !rows['Email']) {
+    toast('Fill in your name and email first.', 'warning'); return;
+  }
+
+  document.getElementById('previewBody').innerHTML = Object.entries(rows).map(([k,v]) => `
+    <div class="preview-row">
+      <span class="preview-key">${k}</span>
+      <span class="preview-val">${v}</span>
+    </div>`).join('');
+  document.getElementById('previewOverlay').classList.add('active');
+};
+
+/* ── Submit application ───────────────────── */
+window.submitApplication = async function () {
+  document.getElementById('previewOverlay').classList.remove('active');
+
+  const get = id => document.getElementById(id)?.value?.trim() || '';
+  const data = {
+    name:        get('f-name'),
+    email:       get('f-email'),
+    collegeName: get('f-college'),
+    contact:     get('f-contact'),
+    linkedin:    get('f-linkedin'),
+    branch:      get('f-branch'),
+    year:        get('f-year'),
+    cgpa:        get('f-cgpa'),
+    message:     get('f-message'),
+  };
+
+  const required = ['name','email','collegeName','contact','linkedin','branch','year','cgpa'];
+  if (required.some(k => !data[k])) { toast('Fill all required fields.', 'warning'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email))             { toast('Invalid email.', 'error'); return; }
+  if (!/^[6-9]\d{9}$/.test(data.contact))                         { toast('Invalid mobile number (must start 6-9, 10 digits).', 'error'); return; }
+  if (!data.linkedin.startsWith('https://www.linkedin.com/'))      { toast('LinkedIn URL must start with https://www.linkedin.com/', 'error'); return; }
+  const cgpa = parseFloat(data.cgpa);
+  if (isNaN(cgpa) || cgpa < 0 || cgpa > 10)                       { toast('CGPA must be between 0 and 10.', 'error'); return; }
+
+  // Duplicate check
+  const dupQ = query(collection(db,'applications'), where('email','==',data.email), where('role','==',selectedJob.title));
+  const dupSn = await getDocs(dupQ);
+  if (!dupSn.empty) { toast('You have already applied for this role.', 'warning'); return; }
+
+  // Quota check
+  const qtQ  = query(collection(db,'applications'), where('role','==',selectedJob.title));
+  const qtSn = await getDocs(qtQ);
+  if (qtSn.size >= selectedJob.quota) { toast('This role is now full. All seats have been filled.', 'warning'); return; }
+
+  // App limit check
+  const limSn = await getDocs(query(collection(db,'applications'), where('email','==',data.email)));
+  const active = limSn.docs.filter(d => !['rejected','withdrawn'].includes(d.data().status)).length;
+  if (active >= APP_LIMIT) { toast(`Max ${APP_LIMIT} active applications. Withdraw one first.`, 'warning'); return; }
+
+  // Sanitise
+  const san = s => String(s).replace(/[<>"']/g, '');
+  Object.keys(data).forEach(k => { data[k] = san(data[k]); });
 
   try {
-  await addDoc(collection(db, "applications"), application);
-  showUserPopup(
-  "✅ Application Submitted",
-  "Your application has been submitted successfully 🚀"
-);
-document.getElementById("applyBtn").style.display = "none";
-document.getElementById("result").innerText =
-  "🎉 Application submitted. You can apply again for another role.";
+    await addDoc(collection(db, 'applications'), {
+      ...data,
+      role:       selectedJob.title,
+      company:    selectedJob.company,
+      matchScore: resumeAnalysis?.score ?? null,
+      date:       new Date().toLocaleString('en-IN'),
+      status:     'pending',
+    });
 
-
-  }catch (error) {
-  console.error(error);
-  showUserPopup(
-  "❌ Submission Failed",
-  "Something went wrong. Please try again."
-);
-return;
-
-}
-
-
-  
-  document.getElementById("applyForm").reset();
-  document.getElementById("applyForm").style.display = "none";
-}
-
-
-
-function detectIntent(text) {
-  text = text.toLowerCase();
-  if (text.includes("resume")) return "resume";
-  if (text.includes("internship")) return "internship";
-  if (text.includes("job")) return "job";
-  if (text.includes("interview")) return "interview";
-  if (text.includes("motivate")) return "motivation";
-  return "general";
-}
-
-const tutorReplies = {
-  resume: ["A resume should clearly show your skills and projects."],
-  internship: ["Internships help you gain real-world experience."],
-  job: ["Companies hire problem-solvers."],
-  interview: ["Interviews test thinking, not memorization."],
-  motivation: ["Discipline beats motivation."],
-  general: ["Ask me about resumes, internships, jobs, interviews."]
+    localStorage.setItem('cp_email', data.email);
+    localStorage.setItem('cp_last_form', JSON.stringify({
+      name: data.name, email: data.email, college: data.collegeName,
+      contact: data.contact, linkedin: data.linkedin,
+      branch: data.branch, year: data.year, cgpa: data.cgpa,
+    }));
+    localStorage.removeItem('cp_draft');
+    logActivity('📝', `Applied for ${selectedJob.title} at ${selectedJob.company}`);
+    advanceProgress(3);
+    popularityMap[selectedJob.title] = (popularityMap[selectedJob.title] || 0) + 1;
+    toast('Application submitted! 🎉', 'success');
+    document.getElementById('applyForm').style.display = 'none';
+    document.getElementById('applyBtn').style.display  = 'none';
+    renderJobs();
+  } catch (err) {
+    console.error(err);
+    toast('Submission failed. Check your connection and try again.', 'error');
+  }
 };
 
-function aiSend() {
-  const input = document.getElementById("aiInput");
-  const messages = document.getElementById("aiMessages");
-  const text = input.value.trim();
-  if (!text) return;
-
-  messages.innerHTML += `<div class="ai-user">${text}</div>`;
-  input.value = "";
-
-  setTimeout(() => {
-    messages.innerHTML += `<div class="ai-bot">${tutorReplies[detectIntent(text)][0]}</div>`;
-    messages.scrollTop = messages.scrollHeight;
-  }, 300);
-}
-
-window.checkMatch = checkMatch;
-window.apply = apply;
-window.submitApplication = submitApplication;
-window.aiSend = aiSend;
-
-
-(function () {
-
-  const KNOWLEDGE_BASE = [
-    
-    {
-      keywords: ["what is resume", "resume kya", "resume meaning"],
-      answer:
-        "A resume is a professional document that summarizes your education, skills, projects, and experience. Its goal is to get you shortlisted for an interview."
-    },
-    {
-      keywords: ["how to make resume", "resume kaise banaye", "resume tips"],
-      answer:
-        "Use a one-page reverse-chronological format. Focus on skills, projects, and measurable results. Avoid paragraphs—use bullet points with action verbs."
-    },
-    {
-      keywords: ["ats", "applicant tracking"],
-      answer:
-        "ATS (Applicant Tracking System) is software used by companies to filter resumes. To pass ATS, use job-description keywords, simple formatting, and no tables or images."
-    },
-    {
-      keywords: ["resume bullet", "resume points"],
-      answer:
-        "Use the XYZ formula: Achieved X, measured by Y, by doing Z. Example: Improved website load time by 30% by optimizing JavaScript code."
-    },
-
-    
-    {
-      keywords: ["what is internship", "internship kya"],
-      answer:
-        "An internship is a short-term professional experience where students learn real-world skills by working on practical tasks."
-    },
-    {
-      keywords: ["internship without experience", "no experience internship"],
-      answer:
-        "Build projects, contribute to GitHub, complete certifications, and show learning ability. Projects count as experience."
-    },
-    {
-      keywords: ["how to get internship", "internship kaise milegi"],
-      answer:
-        "Apply early, build 2–3 solid projects, optimize LinkedIn, and message recruiters with a short, focused introduction."
-    },
-
-    
-    {
-      keywords: ["job kaise milegi", "how to get job"],
-      answer:
-        "Focus on skills, not just degrees. Apply consistently, build projects, network on LinkedIn, and prepare for interviews."
-    },
-    {
-      keywords: ["hidden job market"],
-      answer:
-        "Around 70% jobs are filled through referrals and networking, not job portals. Connections matter."
-    },
-
-    
-    {
-      keywords: ["tell me about yourself"],
-      answer:
-        "Use Past–Present–Future. Past: your background. Present: what you're doing now. Future: why this role and how you add value."
-    },
-    {
-      keywords: ["interview preparation", "interview tips"],
-      answer:
-        "Practice mock interviews, revise fundamentals, explain your thinking clearly, and prepare STAR stories."
-    },
-    {
-      keywords: ["why should we hire you"],
-      answer:
-        "Explain how your skills solve the company’s problems and how you will add value from day one."
-    },
-    {
-      keywords: ["weakness"],
-      answer:
-        "Choose a real weakness and explain what you are doing to improve it. Avoid clichés like perfectionism."
-    },
-
-    
-    {
-      keywords: ["demotivated", "motivation", "stress"],
-      answer:
-        "Motivation comes and goes. Discipline and consistency create long-term success. Focus on small daily progress."
-    }
-  ];
-
-  function findAnswer(question) {
-    const q = question.toLowerCase();
-
-    for (let item of KNOWLEDGE_BASE) {
-      for (let key of item.keywords) {
-        if (q.includes(key)) {
-          return item.answer;
-        }
-      }
-    }
-
-    return "Sorry Sir/Ma’am, I am not developed enough to give an accurate answer to this question yet.";
-  }
-
-  function aiSend() {
-    const input = document.getElementById("aiInput");
-    const messages = document.getElementById("aiMessages");
-    const text = input.value.trim();
-
-    if (!text) return;
-
-    messages.innerHTML += `<div class="ai-user">${text}</div>`;
-    input.value = "";
-
-    const reply = findAnswer(text);
-
-    setTimeout(() => {
-      messages.innerHTML += `<div class="ai-bot">${reply}</div>`;
-      messages.scrollTop = messages.scrollHeight;
-    }, 300);
-  }
-
-
-  window.aiSend = aiSend;
-
-})();
-
-
-(function () {
-
-  
-  const knowledge = [
-    
-    { keys: ["resume"], ans: "A resume is a professional document that highlights your skills, education, projects, and experience to get shortlisted for interviews." },
-    { keys: ["ats"], ans: "ATS (Applicant Tracking System) is software that scans resumes for keywords. Use job-description keywords and simple formatting to pass ATS." },
-    { keys: ["resume format"], ans: "The best resume format is reverse-chronological. Keep it one page, use bullet points, and avoid images or tables." },
-    { keys: ["resume tips"], ans: "Use action verbs, quantify results, tailor your resume for every job, and focus on projects if you are a fresher." },
-
-    
-    { keys: ["internship"], ans: "An internship helps students gain real-world experience. Focus on learning skills, not just stipend." },
-    { keys: ["internship without experience"], ans: "Build projects, contribute to GitHub, complete certifications, and show learning ability. Projects count as experience." },
-
-    
-    { keys: ["job"], ans: "To get a job, focus on skills, apply consistently, network on LinkedIn, and prepare well for interviews." },
-    { keys: ["hidden job market"], ans: "Most jobs are filled through referrals and networking, not job portals. Connections matter." },
-
-    
-    { keys: ["tell me about yourself"], ans: "Answer using Past–Present–Future: background, current work, and why you want this role." },
-    { keys: ["interview"], ans: "Interviews test how you think. Be clear, think aloud, and use STAR method for behavioral questions." },
-
-    
-    { keys: ["demotivated","tired","fail","failure","stress","confused","give up","quit"], ans: "Feeling low is normal. Stay consistent, focus on small daily progress, and trust the process. Discipline beats motivation." }
-  ];
-
-  const motivationLines = [
-    "Consistency beats motivation every time.",
-    "Every expert was once a beginner.",
-    "Progress is invisible before it becomes visible.",
-    "Failure is feedback, not judgment.",
-    "Small steps daily create big results.",
-    "You are not behind; you are building.",
-    "Discipline creates confidence.",
-    "Your effort today shapes your future.",
-    "Learning never goes to waste.",
-    "Don’t quit—refine your strategy."
-  ];
-
-  
-  function getAnswer(question) {
-    const q = question.toLowerCase();
-
-    
-    for (let item of knowledge) {
-      for (let k of item.keys) {
-        if (q.includes(k)) {
-          return item.ans;
-        }
-      }
-    }
-
-  
-    for (let word of ["sad","tired","lost","demotivated","stress","fail","failure"]) {
-      if (q.includes(word)) {
-        return motivationLines[Math.floor(Math.random() * motivationLines.length)];
-      }
-    }
-
-    
-    return "Sorry Sir/Ma’am, I am not developed enough to give an accurate answer to this question yet.";
-  }
-
-  
-  function aiSend() {
-    const input = document.getElementById("aiInput");
-    const messages = document.getElementById("aiMessages");
-    if (!input || !messages) return;
-
-    const text = input.value.trim();
-    if (!text) return;
-
-    messages.innerHTML += `<div class="ai-user">${text}</div>`;
-    input.value = "";
-
-    const reply = getAnswer(text);
-
-    setTimeout(() => {
-      messages.innerHTML += `<div class="ai-bot">${reply}</div>`;
-      messages.scrollTop = messages.scrollHeight;
-    }, 300);
-  }
-
-  
-  window.aiSend = aiSend;
-
-})();
-window.showUserPopup = function (title, message, onYes) {
-  const modal = document.getElementById("userPopup");
-  const titleEl = document.getElementById("userPopupTitle");
-  const msgEl = document.getElementById("userPopupMsg");
-  const yesBtn = document.getElementById("userPopupYes");
-  const noBtn = document.getElementById("userPopupNo");
-
-  titleEl.textContent = title;
-  msgEl.textContent = message;
-
-  modal.style.display = "flex";
-
-  yesBtn.onclick = () => {
-    modal.style.display = "none";
-    if (onYes) onYes();
-  };
-
-  noBtn.onclick = () => {
-    modal.style.display = "none";
-  };
+/* ── Clear quick apply ────────────────────── */
+window.clearQuickApply = function () {
+  localStorage.removeItem('cp_last_form');
+  document.getElementById('quickBanner').classList.remove('visible');
+  toast('Saved details cleared.', 'info');
 };
 
+/* ── Progress tracker ─────────────────────── */
+function advanceProgress(step) {
+  if (step > progressState) { progressState = step; localStorage.setItem('cp_progress', step); }
+  restoreProgress();
+}
+function restoreProgress() {
+  if (progressState === 0) return;
+  document.getElementById('progressSection').style.display = 'block';
+  ['step1','step2','step3','step4','step5'].forEach((id, idx) => {
+    const el = document.getElementById(id); if (!el) return;
+    el.classList.remove('done','active');
+    if (idx < progressState)        el.classList.add('done');
+    else if (idx === progressState)  el.classList.add('active');
+  });
+}
 
+/* ── Activity log ─────────────────────────── */
+function logActivity(icon, text) {
+  const feed = JSON.parse(localStorage.getItem('cp_activity') || '[]');
+  feed.unshift({ icon, text, time: new Date().toLocaleString('en-IN') });
+  localStorage.setItem('cp_activity', JSON.stringify(feed.slice(0, 30)));
+}
 
+/* ── AI Tutor (Gemini-powered with KB fallback) ──────────────── */
+const GEMINI_API_KEY = 'AIzaSyDCgPMAPmbgu84IokBxEjusqndsk05jWsY';
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
+const SYSTEM_PROMPT = `You are a friendly, concise Career AI Tutor on "Coding Protocol" — an internship and placement platform for Indian engineering students.
+
+Platform context:
+- Students can upload a PDF resume for skill analysis and match scoring (75%+ required to apply)
+- There are 10 internship/placement roles from companies like Google, Amazon, IBM, Adobe, Tata Motors, etc.
+- Students can have max 5 active applications at once; they can withdraw to free slots
+- Pipeline stages: Pending → Shortlisted → Interview → Selected / Rejected
+- Students track applications on the "My Applications" dashboard using their email
+
+Your role:
+- Answer questions about resumes, interviews, internships, skill gaps, career advice, and how to use this platform
+- Be specific, practical, and encouraging — keep answers under 80 words
+- If asked about the platform, answer based on the context above
+- If someone seems stressed or discouraged, be motivating
+- Do NOT answer unrelated topics (politics, code generation, etc.) — politely redirect to career topics`;
+
+let aiHistory = [];
+
+const KB = [
+  { keys:['resume'],          ans:'Keep it to one page, use action verbs, and tailor keywords per role.' },
+  { keys:['ats'],             ans:'Use job description keywords, avoid tables and images, keep formatting simple.' },
+  { keys:['internship'],      ans:'Treat it like a real job — deliver quality, ask questions, build relationships.' },
+  { keys:['interview'],       ans:'Practice mocks, revise fundamentals, use STAR method for behavioural questions.' },
+  { keys:['linkedin'],        ans:'Sharp headline, updated projects, connect with people in your target domain.' },
+  { keys:['skill','missing'], ans:'Upload your resume and click Check Match on a role to see your skill gaps.' },
+  { keys:['limit','how many'],ans:`You can have up to ${APP_LIMIT} active applications. Withdraw to free a slot.` },
+  { keys:['withdraw'],        ans:'Go to My Applications and click Withdraw on any active application.' },
+  { keys:['preview'],         ans:'Click Preview Application to review all details before final submission.' },
+  { keys:['draft'],           ans:'Your form auto-saves as you type. Data is restored if you close the tab.' },
+  { keys:['sad','fail','stress','tired','give up'], ans:'Discipline compounds — small daily progress builds what you cannot yet see. Keep going.' },
+];
+
+function kbFallback(txt) {
+  const lq = txt.toLowerCase();
+  return KB.find(e => e.keys.some(k => lq.includes(k)))?.ans
+    || 'Try asking about resumes, internships, interviews, LinkedIn, or skill gaps.';
+}
+
+window.aiSend = async function () {
+  const inp  = document.getElementById('aiInput');
+  const msgs = document.getElementById('aiMessages');
+  const txt  = inp.value.trim();
+  if (!txt) return;
+
+  msgs.innerHTML += `<div class="ai-user">${txt}</div>`;
+  inp.value = '';
+  msgs.scrollTop = msgs.scrollHeight;
+
+  const typingId = 'ai-typing-' + Date.now();
+  msgs.innerHTML += `<div class="ai-bot" id="${typingId}" style="opacity:.6;">Thinking…</div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+
+  aiHistory.push({ role: 'user', parts: [{ text: txt }] });
+  if (aiHistory.length > 20) aiHistory = aiHistory.slice(-20);
+
+  let reply;
+  try {
+    const res = await fetch(GEMINI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        contents: aiHistory,
+        generationConfig: { maxOutputTokens: 180, temperature: 0.7 }
+      })
+    });
+    if (!res.ok) throw new Error(`API error ${res.status}`);
+    const data = await res.json();
+    reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!reply) throw new Error('Empty response');
+    aiHistory.push({ role: 'model', parts: [{ text: reply }] });
+  } catch (err) {
+    console.warn('Gemini unavailable, using fallback:', err);
+    reply = kbFallback(txt);
+    aiHistory.pop(); // remove the unanswered user turn from history
+  }
+
+  const typingEl = document.getElementById(typingId);
+  if (typingEl) { typingEl.style.opacity = '1'; typingEl.textContent = reply; }
+  else msgs.innerHTML += `<div class="ai-bot">${reply}</div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+};
+
+/* ── Toast ────────────────────────────────── */
+window.toast = function (msg, type = 'info') {
+  const icons = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span class="toast-icon">${icons[type]}</span><span>${msg}</span>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+};

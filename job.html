@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Job Details — Coding Protocol</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<nav class="top-nav">
+  <a href="index.html" class="nav-brand">
+    <span class="brand-dot"></span>Coding Protocol
+  </a>
+  <div class="nav-links">
+    <a href="index.html" class="btn btn-ghost btn-sm">← All Roles</a>
+    <a href="dashboard.html" class="btn btn-ghost btn-sm">My Applications</a>
+  </div>
+</nav>
+
+<div class="page z1" id="jobPage">
+
+  <!-- Hero -->
+  <div class="job-detail-hero">
+    <div class="jd-company" id="jd-company">Loading…</div>
+    <h1 id="jd-title">—</h1>
+    <div class="job-meta-row" id="jd-meta"></div>
+  </div>
+
+  <!-- Grid: main + sidebar -->
+  <div class="jd-grid">
+
+    <!-- Main -->
+    <div>
+      <div class="glass panel">
+        <div class="jd-section">
+          <h3>About the Role</h3>
+          <p id="jd-desc">—</p>
+        </div>
+
+        <div class="jd-section">
+          <h3>Responsibilities</h3>
+          <ul class="jd-list" id="jd-resp"></ul>
+        </div>
+
+        <div class="jd-section">
+          <h3>Skills Required</h3>
+          <div class="card-skills" id="jd-skills"></div>
+        </div>
+
+        <div class="jd-section">
+          <h3>About <span id="jd-co-name"></span></h3>
+          <p id="jd-co-info" style="font-size:.875rem;color:var(--txt-2);line-height:1.7;">—</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div>
+
+      <!-- Apply card -->
+      <div class="glass jd-sidebar-card" id="jd-apply-card">
+        <h4>Apply Now</h4>
+
+        <!-- Quota display -->
+        <div class="quota-display">
+          <div class="qnum" id="jd-quota-num">—</div>
+          <div class="qlabel">seats available</div>
+          <div class="quota-bar-wrap" style="margin-top:10px;">
+            <div class="quota-label">
+              <span id="jd-applied-label">— applied</span>
+              <span id="jd-quota-pct">—</span>
+            </div>
+            <div class="quota-bar"><div class="quota-fill" id="jd-quota-fill" style="width:0%"></div></div>
+          </div>
+        </div>
+
+        <div class="popularity-display" id="jd-popularity" style="margin-top:10px;">
+          <span>🔥</span><span id="jd-pop-text">Loading applicant count…</span>
+        </div>
+
+        <button id="jd-apply-btn" class="btn btn-primary btn-full" style="margin-top:14px;"
+          onclick="startApply()">
+          Check Resume Match & Apply
+        </button>
+        <p id="jd-apply-note" style="font-size:.75rem;color:var(--txt-3);margin-top:8px;text-align:center;"></p>
+      </div>
+
+      <!-- Quick info -->
+      <div class="glass jd-sidebar-card">
+        <h4>Quick Info</h4>
+        <div class="jd-perk" id="jd-location">—</div>
+        <div class="jd-perk" id="jd-type">—</div>
+        <div class="jd-perk" id="jd-duration">—</div>
+        <div class="jd-perk" id="jd-deadline-info">—</div>
+        <div class="jd-perk" id="jd-stipend-info">—</div>
+      </div>
+
+      <!-- Perks -->
+      <div class="glass jd-sidebar-card">
+        <h4>What you get</h4>
+        <div id="jd-perks"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal -->
+<div id="popup" class="modal-overlay">
+  <div class="modal-box">
+    <h2 id="popupTitle"></h2>
+    <p  id="popupMsg"></p>
+    <div class="modal-actions">
+      <button id="popupOk"     class="btn btn-primary">OK</button>
+      <button id="popupCancel" class="btn btn-ghost" style="display:none;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="three-bg.js"></script>
+<script type="module" src="firebase.js"></script>
+<script type="module" src="job.js"></script>
+</body>
+</html>
