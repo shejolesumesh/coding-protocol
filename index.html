@@ -50,13 +50,14 @@
 
 <div class="page">
 
-  
+  <!-- HERO -->
   <header class="site-header">
     <div class="eyebrow">✦ Hack'Vento 2026 · GDGoC IET DAVV</div>
     <h1>Coding Protocol</h1>
     <p class="sub">Find internships, analyse your resume, and track every step of your journey.</p>
   </header>
 
+  <!-- RESUME ANALYSIS -->
   <section class="glass panel">
     <div class="section-label">Resume Analysis</div>
     <div class="quick-apply-banner" id="quickBanner">
@@ -98,7 +99,7 @@
     </div>
   </section>
 
-  
+  <!-- PROGRESS TRACKER -->
   <section class="glass panel" id="progressSection" style="display:none;">
     <div class="section-label">Application Progress</div>
     <div class="progress-tracker" id="progressTracker">
@@ -110,13 +111,13 @@
     </div>
   </section>
 
-  
+  <!-- FEATURED BANNER -->
   <div class="featured-banner" id="featuredBanner">
     <span class="fb-label">⭐ Featured</span>
     <div class="fb-jobs" id="featuredJobs"></div>
   </div>
 
-  
+  <!-- SEARCH + FILTER -->
   <div class="search-bar">
     <div class="search-input-wrap">
       <span class="search-icon">🔍</span>
@@ -149,10 +150,10 @@
     <span class="jobs-count" id="jobsCount">10 roles</span>
   </div>
 
-  
+  <!-- CATEGORY TABS -->
   <div class="category-tabs" id="categoryTabs"></div>
 
-  
+  <!-- JOB CARDS -->
   <section class="glass panel">
     <div class="section-label">Open Roles</div>
     <div class="cards-grid" id="cardsGrid">
@@ -165,13 +166,13 @@
     </div>
   </section>
 
-  
+  <!-- SIMILAR JOBS (shown after match check) -->
   <section class="glass panel" id="similarSection" style="display:none;">
     <div class="section-label">Similar Roles You Might Like</div>
     <div class="similar-strip" id="similarStrip"></div>
   </section>
 
-  
+  <!-- APPLICATION FORM -->
   <section class="glass panel" id="applyForm" style="display:none;">
     <div class="section-label">Application Form</div>
     <p style="font-size:.875rem;color:var(--txt-2);margin-bottom:4px;">
@@ -203,7 +204,9 @@
     </div>
   </section>
 
-</div>
+</div><!-- end .page -->
+
+<!-- APPLICATION PREVIEW MODAL -->
 <div class="modal-overlay" id="previewOverlay">
   <div class="preview-modal-box">
     <div class="preview-header">
@@ -218,7 +221,7 @@
   </div>
 </div>
 
-
+<!-- GENERIC CONFIRM MODAL -->
 <div id="popup" class="modal-overlay">
   <div class="modal-box">
     <h2 id="popupTitle"></h2>
@@ -230,9 +233,20 @@
   </div>
 </div>
 
-
-<aside class="ai-chat">
-  <div class="ai-header"><span class="pulse-dot"></span>Career AI Tutor</div>
+<!-- AI TUTOR -->
+<aside class="ai-chat" id="aiChat">
+  <div class="ai-header" id="aiDragHandle">
+    <div class="ai-drag-grip">
+      <span></span><span></span><span></span>
+    </div>
+    <div class="ai-header-title">
+      <span class="pulse-dot"></span>Career AI Tutor
+    </div>
+    <div class="ai-header-actions">
+      <button class="ai-ctrl-btn" id="aiMinBtn" title="Minimize / Expand" onclick="toggleAiChat(event)">─</button>
+      <button class="ai-ctrl-btn" id="aiCloseBtn" title="Close chat" onclick="closeAiChat(event)" style="background:rgba(244,63,94,0.15);color:var(--rose);">✕</button>
+    </div>
+  </div>
   <div class="ai-messages" id="aiMessages">
     <div class="ai-bot">Hi! Ask me about resumes, internships, interviews, or skill gaps.</div>
   </div>
@@ -242,6 +256,16 @@
     <button onclick="aiSend()">Send</button>
   </div>
 </aside>
+
+<!-- AI Chat reopen button (shown when chat is closed) -->
+<button id="aiReopenBtn" title="Open Career AI Tutor"
+  style="display:none;position:fixed;bottom:24px;right:24px;z-index:1001;
+         width:52px;height:52px;border-radius:50%;border:1px solid rgba(56,189,248,0.35);
+         background:linear-gradient(135deg,rgba(30,58,138,0.9),rgba(29,78,216,0.9));
+         color:#fff;font-size:1.3rem;cursor:pointer;
+         box-shadow:0 8px 32px rgba(37,99,235,0.45),0 0 0 1px rgba(56,189,248,0.2);
+         transition:all .2s;"
+  onclick="reopenAiChat()">💬</button>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="three-bg.js"></script>
