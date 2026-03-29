@@ -1,12 +1,8 @@
-/**
- * three-bg.js — Immersive constellation + nebula background
- * Dramatically enhanced: multi-color glowing particles, animated clusters,
- * camera drift, depth fog, mouse parallax, pulsing energy nodes.
- */
+
 (function initThreeBg() {
   if (typeof THREE === 'undefined') return;
 
-  /* ── Renderer ── */
+  
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.setSize(innerWidth, innerHeight);
@@ -22,10 +18,10 @@
   const camera = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, 0.1, 1000);
   camera.position.z = 7;
 
-  /* ── Particle colors (sky, violet, em) ── */
+  
   const COLORS = [0x38bdf8, 0xa78bfa, 0x10b981, 0x60a5fa, 0xe879f9];
 
-  /* ── Small background stars ── */
+  
   const STAR_N = 220;
   const starPts = Array.from({ length: STAR_N }, () => ({
     x: (Math.random() - 0.5) * 36,
@@ -41,7 +37,7 @@
   const starMat = new THREE.PointsMaterial({ color: 0x93c5fd, size: 0.03, transparent: true, opacity: 0.5 });
   scene.add(new THREE.Points(starGeo, starMat));
 
-  /* ── Main glowing nodes ── */
+  
   const N = 80;
   const pts = Array.from({ length: N }, () => ({
     x:  (Math.random() - 0.5) * 26,
@@ -55,7 +51,7 @@
     pulse: 0.4 + Math.random() * 0.8,
   }));
 
-  /* One draw call per color group */
+  
   const colorGroups = {};
   COLORS.forEach(c => { colorGroups[c] = []; });
   pts.forEach((p, i) => colorGroups[p.color].push(i));
@@ -71,7 +67,7 @@
     dotMeshes[c] = { mesh, geo, indices: colorGroups[c] };
   });
 
-  /* ── Energy nodes (larger glowing orbs) ── */
+  
   const NODE_N = 8;
   const nodes = Array.from({ length: NODE_N }, () => ({
     x: (Math.random() - 0.5) * 20,
@@ -87,7 +83,7 @@
   const nodeMat = new THREE.PointsMaterial({ color: 0x38bdf8, size: 0.26, transparent: true, opacity: 0.6 });
   scene.add(new THREE.Points(nodeGeo, nodeMat));
 
-  /* ── Connection lines ── */
+
   const lineMat = new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.07 });
   const lineMat2 = new THREE.LineBasicMaterial({ color: 0xa78bfa, transparent: true, opacity: 0.05 });
   let lineMesh1 = null, lineMesh2 = null;
@@ -117,7 +113,7 @@
     }
   }
 
-  /* ── Mouse parallax ── */
+  
   let mx = 0, my = 0, targetCamX = 0, targetCamY = 0;
   addEventListener('mousemove', e => {
     mx =  (e.clientX / innerWidth  - 0.5) * 26;
@@ -126,7 +122,7 @@
     targetCamY = (e.clientY / innerHeight - 0.5) * -0.25;
   });
 
-  /* ── Animate ── */
+  
   let frame = 0;
   const camDrift = { x: 0, y: 0 };
 
@@ -135,13 +131,13 @@
     frame++;
     const t = frame * 0.008;
 
-    /* Camera gentle drift + mouse parallax */
+    
     camDrift.x += 0.0004 * Math.sin(t * 0.3);
     camDrift.y += 0.0003 * Math.cos(t * 0.2);
     camera.position.x += (targetCamX + camDrift.x - camera.position.x) * 0.02;
     camera.position.y += (targetCamY + camDrift.y - camera.position.y) * 0.02;
 
-    /* Update background stars */
+    
     const sa = starGeo.attributes.position;
     for (let i = 0; i < STAR_N; i++) {
       const p = starPts[i];
@@ -155,7 +151,7 @@
     sa.needsUpdate = true;
     starMat.opacity = 0.3 + 0.2 * Math.sin(t * 0.5);
 
-    /* Update main nodes */
+    
     for (let i = 0; i < N; i++) {
       const p = pts[i];
       p.x += p.vx; p.y += p.vy;
@@ -166,7 +162,7 @@
       if (d2 < 6 && d2 > 0.01) { const d = Math.sqrt(d2); p.x += dx/d * 0.03; p.y += dy/d * 0.03; }
     }
 
-    /* Write positions per color group + pulse size */
+    
     COLORS.forEach(c => {
       const { mesh, geo, indices } = dotMeshes[c];
       const attr = geo.attributes.position;

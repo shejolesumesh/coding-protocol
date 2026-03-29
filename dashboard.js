@@ -1,9 +1,4 @@
-/**
- * dashboard.js — Student Dashboard v4
- * Features: success rate analytics · pipeline visualization
- *           withdrawal · activity feed · saved jobs panel
- *           application tips · charts · last-applied tracking
- */
+
 
 import { collection, getDocs, updateDoc, doc, query, where } from
   'https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js';
@@ -14,7 +9,7 @@ let myApps      = [];
 let statusChart = null;
 let roleChart   = null;
 
-/* ── Boot ──────────────────────────────── */
+
 document.addEventListener('DOMContentLoaded', () => {
   // Restore saved email
   const saved = localStorage.getItem('cp_email');
@@ -28,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderTips();
 });
 
-/* ── Load dashboard ─────────────────────── */
+
 window.loadDashboard = async function () {
   const email = document.getElementById('emailInput').value.trim().toLowerCase();
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -62,14 +57,14 @@ window.loadDashboard = async function () {
   }
 };
 
-/* ── Stats ─────────────────────────────── */
+
 function updateStats() {
   const c = { total:myApps.length, pending:0, shortlisted:0, interview:0, selected:0, rejected:0 };
   myApps.forEach(a => { if (c[a.status]!==undefined) c[a.status]++; });
   Object.entries(c).forEach(([k,v]) => { const el=document.getElementById('st-'+k); if(el) el.textContent=v; });
 }
 
-/* ── Success rate ───────────────────────── */
+
 function renderSuccessRate() {
   const total    = myApps.length;
   const selected = myApps.filter(a => a.status === 'selected').length;
@@ -90,7 +85,7 @@ function renderSuccessRate() {
   `;
 }
 
-/* ── Charts ─────────────────────────────── */
+
 function renderCharts() {
   const counts = { pending:0, shortlisted:0, interview:0, selected:0, rejected:0, withdrawn:0 };
   myApps.forEach(a => { if(counts[a.status]!==undefined) counts[a.status]++; });
@@ -116,7 +111,7 @@ function renderCharts() {
   });
 }
 
-/* ── Applications table ─────────────────── */
+
 function renderTable() {
   const PIPE_KEYS = ['pending','shortlisted','interview','selected'];
   const tbody = document.getElementById('appBody');
@@ -152,7 +147,7 @@ function renderTable() {
 
 function esc(s) { return String(s||'').replace(/[<>"'&]/g,c=>({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'}[c])); }
 
-/* ── Withdraw ───────────────────────────── */
+
 window.withdrawApp = function (id, role) {
   document.getElementById('popupTitle').textContent = `Withdraw from ${role}?`;
   document.getElementById('popupMsg').textContent   = 'This frees up one active application slot.';
@@ -170,7 +165,7 @@ window.withdrawApp = function (id, role) {
   document.getElementById('popup').classList.add('active');
 };
 
-/* ── Activity feed ──────────────────────── */
+
 function renderActivityFeed() {
   const activity = JSON.parse(localStorage.getItem('cp_activity') || '[]');
   const feed     = document.getElementById('activityFeed');
@@ -192,7 +187,7 @@ function logActivity(icon, text) {
   renderActivityFeed();
 }
 
-/* ── Saved jobs ─────────────────────────── */
+
 function renderSavedJobs() {
   const savedIds = JSON.parse(localStorage.getItem('cp_saved') || '[]');
   const list     = document.getElementById('savedJobsList');
@@ -208,7 +203,7 @@ function renderSavedJobs() {
     </div>`).join('');
 }
 
-/* ── Tips ───────────────────────────────── */
+
 const TIPS = [
   { icon:'📝', title:'Tailor every application', text:'Use keywords from the job description in your resume. A 75%+ match score unlocks the apply button on this platform.' },
   { icon:'⚡', title:'Apply within first 48 hours', text:'Early applicants are more likely to be noticed. Set "Deadline: Soonest" in the sort filter.' },
@@ -226,7 +221,7 @@ function renderTips() {
     </div>`).join('');
 }
 
-/* ── Toast ──────────────────────────────── */
+
 function toast(msg, type='info') {
   const icons={success:'✅',error:'❌',warning:'⚠️',info:'ℹ️'};
   const el=document.createElement('div'); el.className=`toast ${type}`;

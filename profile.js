@@ -1,29 +1,22 @@
-/**
- * profile.js — User Profile System
- * Features: completeness meter (0–100%) · editable skills with chip UI
- *           education history · certifications · project showcase
- *           portfolio links (GitHub, LinkedIn, Website, LeetCode)
- *           multiple contacts · resume timestamp · public/private toggle
- *           localStorage-persisted · save indicator
- */
+
 
 'use strict';
 
-/* ── Data structure stored in localStorage under 'cp_profile' ── */
+
 let profile = {
   basic:      { name:'', email:'', phone1:'', phone2:'', college:'', branch:'', year:'', cgpa:'' },
   links:      { linkedin:'', github:'', website:'', leetcode:'' },
   education:  { '10-board':'', '10-score':'', '12-board':'', '12-score':'', deg:'' },
   skills:     [],
-  certs:      [],      // [{ name, issuer, year }]
-  projects:   [],      // [{ name, desc, link, tech }]
+  certs:      [],      
+  projects:   [],      
   resume:     { fileName:'', uploadedAt:'' },
   visibility: 'public',
 };
 
 let dirty = false;
 
-/* ── Boot ──────────────────────────────── */
+
 window.addEventListener('DOMContentLoaded', () => {
   loadProfile();
   renderAll();
@@ -36,7 +29,7 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-/* ── Load / Save ────────────────────────── */
+
 function loadProfile() {
   const stored = localStorage.getItem('cp_profile');
   if (stored) {
@@ -96,7 +89,7 @@ function updateSaveBadge(unsaved) {
   badge.style.color  = unsaved ? 'var(--amber)' : 'var(--txt-3)';
 }
 
-/* ── Render all fields ──────────────────── */
+
 function renderAll() {
   // Basic inputs
   ['name','email','phone1','phone2','college','branch','year','cgpa'].forEach(k => {
@@ -119,7 +112,7 @@ function renderAll() {
   renderVisibility();
 }
 
-/* ── Hero ───────────────────────────────── */
+
 function renderHero() {
   const name    = profile.basic.name  || 'Your Name';
   const initials= name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2) || '?';
@@ -141,7 +134,7 @@ function renderHero() {
   ).join('');
 }
 
-/* ── Skills ─────────────────────────────── */
+
 function renderSkills() {
   const el = document.getElementById('skillsDisplay');
   if (!el) return;
@@ -167,7 +160,7 @@ window.removeSkill = function (skill) {
   savePart('skills');
 };
 
-/* ── Certifications ─────────────────────── */
+
 function renderCerts() {
   const el = document.getElementById('certList');
   if (!el) return;
@@ -191,7 +184,7 @@ window.updateCert = function (i, key, val) {
   if (profile.certs[i]) profile.certs[i][key] = val; savePart('certs');
 };
 
-/* ── Projects ───────────────────────────── */
+
 function renderProjects() {
   const el = document.getElementById('projectList');
   if (!el) return;
@@ -219,7 +212,7 @@ window.updateProject = function (i, key, val) {
   if (profile.projects[i]) profile.projects[i][key] = val; savePart('projects');
 };
 
-/* ── Resume upload ──────────────────────── */
+
 window.handleResumeUpload = function (input) {
   const file = input.files[0]; if (!file) return;
   if (file.type !== 'application/pdf') { toast('PDF files only.','error'); return; }
@@ -240,7 +233,7 @@ function renderResumeStatus() {
   }
 }
 
-/* ── Visibility toggle ──────────────────── */
+
 window.toggleVisibility = function () {
   profile.visibility = profile.visibility === 'public' ? 'private' : 'public';
   renderVisibility();
@@ -261,7 +254,7 @@ function renderVisibility() {
   }
 }
 
-/* ── Completeness meter ─────────────────── */
+
 const COMPLETENESS_CHECKS = [
   { label:'Name',            fn: p => !!p.basic.name },
   { label:'Email',           fn: p => !!p.basic.email },
@@ -307,7 +300,7 @@ function updateCompleteness() {
   }
 }
 
-/* ── Helpers ─────────────────────────────── */
+
 function esc(s) { return String(s||'').replace(/[<>"'&]/g,c=>({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'}[c])); }
 
 function toast(msg, type='info') {

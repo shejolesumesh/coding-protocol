@@ -145,7 +145,7 @@ window.confirmDelete = function (id, name) {
   });
 };
 
-// ── BULK ──
+
 window.toggleSelectAll = function (cb) {
   document.querySelectorAll('.row-check').forEach(c => { c.checked=cb.checked; cb.checked?selected.add(c.dataset.id):selected.delete(c.dataset.id); });
   updateBulkBar();
@@ -179,7 +179,7 @@ window.bulkExport = function () {
   addAdminLog('⬇', `Bulk export (${rows.length})`);
 };
 
-// ── CSV ──
+
 window.exportCSV = function () {
   const filterVal = document.getElementById('exportStatus').value;
   const rows = filterVal==='all' ? allApps : allApps.filter(a=>a.status===filterVal);
@@ -196,7 +196,7 @@ function downloadCSV(rows, filename) {
   toast(`Exported ${rows.length} rows.`,'success');
 }
 
-// ── Activity log ──
+
 function addAdminLog(icon, action, subject='') {
   adminLog.unshift({ icon, action, subject, time:new Date().toLocaleTimeString('en-IN') });
   adminLog = adminLog.slice(0,30);
@@ -211,7 +211,6 @@ function addAdminLog(icon, action, subject='') {
     </div>`).join('');
 }
 
-// ── Confirm modal ──
 function showConfirm(title, msg, onOk) {
   document.getElementById('popupTitle').textContent = title;
   document.getElementById('popupMsg').textContent = msg;
@@ -221,7 +220,7 @@ function showConfirm(title, msg, onOk) {
   document.getElementById('popup').classList.add('active');
 }
 
-// ── Toast ──
+
 function toast(msg, type='info') {
   const icons={success:'✅',error:'❌',warning:'⚠️',info:'ℹ️'};
   const el=document.createElement('div'); el.className=`toast ${type}`;

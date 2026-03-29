@@ -1,6 +1,4 @@
-/**
- * jobs-data.js — Single source of truth for all job listings. v4
- */
+
 
 export const CATEGORIES = ['All', 'Tech', 'Core Engineering', 'Business & Analytics', 'Design', 'Marketing & HR'];
 

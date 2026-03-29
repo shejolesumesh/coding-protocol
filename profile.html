@@ -22,7 +22,7 @@
 
 <div class="page">
 
-  <!-- Profile Hero -->
+
   <div class="profile-hero" id="profileHero">
     <div class="profile-avatar" id="avatarDisplay">?</div>
     <div class="profile-info">
@@ -35,7 +35,7 @@
     </div>
   </div>
 
-  <!-- Completeness Meter -->
+  
   <div class="completeness-card">
     <div class="completeness-header">
       <h4>Profile Completeness</h4>
@@ -45,12 +45,12 @@
     <div class="completeness-items" id="completenessItems"></div>
   </div>
 
-  <!-- Two-column layout -->
+
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="profile-grid">
 
-    <!-- LEFT -->
+  
     <div>
-      <!-- Basic Info -->
+    
       <section class="glass panel" style="margin-bottom:16px;">
         <div class="section-label">Basic Information</div>
         <div class="form-grid">
@@ -65,7 +65,7 @@
         </div>
       </section>
 
-      <!-- Portfolio Links -->
+    
       <section class="glass panel" style="margin-bottom:16px;">
         <div class="section-label">Portfolio Links</div>
         <div class="form-grid">
@@ -76,7 +76,7 @@
         </div>
       </section>
 
-      <!-- Education History -->
+    
       <section class="glass panel" style="margin-bottom:16px;">
         <div class="section-label">Education History</div>
         <div class="form-grid">
@@ -89,9 +89,9 @@
       </section>
     </div>
 
-    <!-- RIGHT -->
+  
     <div>
-      <!-- Skills -->
+      
       <section class="glass panel" style="margin-bottom:16px;">
         <div class="section-label">Skills</div>
         <div style="display:flex;gap:8px;margin-bottom:12px;">
@@ -102,21 +102,21 @@
         <p style="font-size:.75rem;color:var(--txt-3);margin-top:10px;">Click a skill to remove it.</p>
       </section>
 
-      <!-- Certifications -->
+    
       <section class="glass panel" style="margin-bottom:16px;">
         <div class="section-label">Certifications</div>
         <div id="certList" style="display:flex;flex-direction:column;gap:9px;margin-bottom:12px;"></div>
         <button class="btn btn-ghost btn-sm" onclick="addCert()">+ Add Certification</button>
       </section>
 
-      <!-- Projects -->
+      
       <section class="glass panel" style="margin-bottom:16px;">
         <div class="section-label">Project Showcase</div>
         <div id="projectList" style="display:flex;flex-direction:column;gap:12px;margin-bottom:12px;"></div>
         <button class="btn btn-ghost btn-sm" onclick="addProject()">+ Add Project</button>
       </section>
 
-      <!-- Resume timestamp -->
+      
       <section class="glass panel" style="margin-bottom:16px;">
         <div class="section-label">Resume</div>
         <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
@@ -127,9 +127,7 @@
       </section>
     </div>
 
-  </div><!-- end grid -->
-
-  <!-- Save bar -->
+  </div>
   <div style="position:sticky;bottom:24px;display:flex;justify-content:center;z-index:40;">
     <div style="background:var(--surface-hi);border:1px solid var(--border-hi);border-radius:var(--r-lg);padding:14px 28px;display:flex;gap:14px;align-items:center;backdrop-filter:var(--blur);box-shadow:var(--shadow-lg);">
       <span id="saveBadge" style="font-size:.82rem;color:var(--txt-3);">All changes saved</span>

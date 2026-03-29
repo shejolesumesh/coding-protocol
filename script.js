@@ -4,7 +4,7 @@ import { collection, addDoc, getDocs, query, where } from
 import { db } from './firebase.js';
 import { JOBS, BRANCHES, CATEGORIES, APP_LIMIT, DIFFICULTY_META } from './jobs-data.js';
 
-/* ── State ─────────────────────────────────── */
+
 let selectedJob    = null;
 let resumeText     = '';
 let resumeAnalysis = null;
@@ -15,19 +15,19 @@ let popularityMap  = {};
 let activeCategory = 'All';
 let draftTimer     = null;
 
-/* ── Boot ─────────────────────────────────── */
+
 document.addEventListener('DOMContentLoaded', async () => {
-  // First-visit onboarding
+
   if (!localStorage.getItem('cp_onboarded')) {
     document.getElementById('onboarding').style.display = 'flex';
   }
 
-  // Quick apply banner
+  
   if (localStorage.getItem('cp_last_form')) {
     document.getElementById('quickBanner').classList.add('visible');
   }
 
-  // Restore draft into form fields
+  
   const draft = localStorage.getItem('cp_draft');
   if (draft) {
     try {
@@ -43,16 +43,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadPopularityMap();
   renderFeatured();
 
-  // Show skeleton 0.6s then render real cards
+  
   setTimeout(renderJobs, 600);
   restoreProgress();
 
-  // Back-to-top
+  
   window.addEventListener('scroll', () => {
     document.getElementById('backToTop')?.classList.toggle('visible', window.scrollY > 400);
   });
 
-  // Keyboard shortcuts
+  
   document.addEventListener('keydown', e => {
     if (['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
     if (e.key === '/') { e.preventDefault(); document.getElementById('searchInput').focus(); }
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Drag-and-drop on upload area
+  
   const ua = document.getElementById('uploadArea');
   ua.addEventListener('dragover',  e => { e.preventDefault(); ua.classList.add('drag-over'); });
   ua.addEventListener('dragleave', () => ua.classList.remove('drag-over'));
@@ -113,7 +113,7 @@ function buildCategoryTabs() {
   });
 }
 
-/* ── Featured banner ──────────────────────── */
+
 function renderFeatured() {
   const el = document.getElementById('featuredJobs');
   if (!el) return;
@@ -134,7 +134,7 @@ window.quickSelectJob = function (id) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-/* ── Popularity map ───────────────────────── */
+
 async function loadPopularityMap() {
   try {
     const snap = await getDocs(collection(db, 'applications'));
@@ -145,7 +145,7 @@ async function loadPopularityMap() {
   } catch { /* offline – graceful */ }
 }
 
-/* ── Branch filter ────────────────────────── */
+
 function populateBranchFilter() {
   const sel = document.getElementById('branchFilter');
   if (!sel) return;
@@ -155,7 +155,7 @@ function populateBranchFilter() {
   });
 }
 
-/* ── Job cards ────────────────────────────── */
+
 window.renderJobs = function () {
   const q       = document.getElementById('searchInput')?.value.trim().toLowerCase() || '';
   const branch  = document.getElementById('branchFilter')?.value || '';
@@ -267,7 +267,7 @@ window.renderJobs = function () {
   if (selectedJob) renderSimilarJobs(selectedJob);
 };
 
-/* ── Track recently viewed ────────────────── */
+
 window.trackView = function (id) {
   if (!recentlyViewed.includes(id)) {
     recentlyViewed.unshift(id);
@@ -276,7 +276,7 @@ window.trackView = function (id) {
   }
 };
 
-/* ── Save / unsave ────────────────────────── */
+
 window.toggleSave = function (id, e) {
   e.stopPropagation();
   const idx = savedJobs.indexOf(id);
@@ -286,7 +286,7 @@ window.toggleSave = function (id, e) {
   renderJobs();
 };
 
-/* ── Select job for match check ───────────── */
+
 window.selectJob = function (id) {
   selectedJob = JOBS.find(j => j.id === id);
   if (!selectedJob) return;
@@ -299,7 +299,7 @@ window.selectJob = function (id) {
   runMatchAnalysis();
 };
 
-/* ── Resume upload ────────────────────────── */
+
 async function handleResumeFile(file) {
   if (file.type !== 'application/pdf') { toast('PDF files only.', 'error'); return; }
   toast('Extracting resume text…', 'info');
@@ -325,7 +325,7 @@ async function handleResumeFile(file) {
   }
 }
 
-/* ── Skill detection ──────────────────────── */
+
 const SKILL_LIST = [
   'javascript','typescript','react','vue','angular','node','nodejs','python','java','c++','c#','go','php',
   'html','css','tailwind','bootstrap','sql','mysql','postgresql','mongodb','redis','graphql','rest','api',
@@ -407,7 +407,7 @@ function displayAnalysis(analysis, job) {
   document.getElementById('applyBtn').style.display = (job && analysis.score >= 75) ? 'inline-flex' : 'none';
 }
 
-/* ── Match analysis ───────────────────────── */
+
 function runMatchAnalysis() {
   const analysis = analyseResume(resumeText, selectedJob);
   resumeAnalysis = analysis;
@@ -420,7 +420,7 @@ function runMatchAnalysis() {
   renderSimilarJobs(selectedJob);
 }
 
-/* ── Similar jobs ─────────────────────────── */
+
 function renderSimilarJobs(job) {
   const similar = JOBS.filter(j =>
     j.id !== job.id && (j.category === job.category || j.branch.some(b => job.branch.includes(b)))
@@ -438,7 +438,7 @@ function renderSimilarJobs(job) {
     </div>`).join('');
 }
 
-/* ── Open form ────────────────────────────── */
+
 window.openForm = async function () {
   if (!resumeAnalysis || resumeAnalysis.score < 75) {
     toast('Minimum 75% resume match required to apply.', 'warning'); return;
@@ -466,7 +466,7 @@ window.openForm = async function () {
   form.scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 
-/* ── Draft auto-save ──────────────────────── */
+
 window.saveDraft = function () {
   clearTimeout(draftTimer);
   draftTimer = setTimeout(() => {
@@ -484,13 +484,13 @@ window.saveDraft = function () {
   }, 800);
 };
 
-/* ── Cancel form ──────────────────────────── */
+
 window.cancelForm = function () {
   document.getElementById('applyForm').style.display = 'none';
   toast('Application cancelled.', 'info');
 };
 
-/* ── Prefill from quick apply ─────────────── */
+
 function prefillForm() {
   const stored = localStorage.getItem('cp_last_form') || localStorage.getItem('cp_draft');
   if (!stored) return;
@@ -502,7 +502,7 @@ function prefillForm() {
   } catch {}
 }
 
-/* ── Application preview modal ────────────── */
+
 window.showPreview = function () {
   const get = id => document.getElementById(id)?.value?.trim() || '';
   const rows = {
@@ -531,7 +531,7 @@ window.showPreview = function () {
   document.getElementById('previewOverlay').classList.add('active');
 };
 
-/* ── Submit application ───────────────────── */
+
 window.submitApplication = async function () {
   document.getElementById('previewOverlay').classList.remove('active');
 
@@ -605,14 +605,14 @@ window.submitApplication = async function () {
   }
 };
 
-/* ── Clear quick apply ────────────────────── */
+
 window.clearQuickApply = function () {
   localStorage.removeItem('cp_last_form');
   document.getElementById('quickBanner').classList.remove('visible');
   toast('Saved details cleared.', 'info');
 };
 
-/* ── Progress tracker ─────────────────────── */
+
 function advanceProgress(step) {
   if (step > progressState) { progressState = step; localStorage.setItem('cp_progress', step); }
   restoreProgress();
@@ -628,17 +628,17 @@ function restoreProgress() {
   });
 }
 
-/* ── Activity log ─────────────────────────── */
+
 function logActivity(icon, text) {
   const feed = JSON.parse(localStorage.getItem('cp_activity') || '[]');
   feed.unshift({ icon, text, time: new Date().toLocaleString('en-IN') });
   localStorage.setItem('cp_activity', JSON.stringify(feed.slice(0, 30)));
 }
 
-/* ── AI Tutor (fully hardcoded KB — no external API) ─────────── */
+
 
 const KB = [
-  // ── Resume ──────────────────────────────────────────────────────
+  
   { keys:['resume tip','resume advice','improve resume','better resume'],
     ans:'Keep it to one page, use strong action verbs (built, led, optimised), and tailor keywords to each role description.' },
   { keys:['resume format','resume template','how to write resume'],
@@ -652,19 +652,19 @@ const KB = [
   { keys:['resume'],
     ans:'Keep it to one page, use action verbs, quantify achievements, and tailor keywords per role. Upload it here for an instant match score.' },
 
-  // ── ATS ──────────────────────────────────────────────────────────
+  
   { keys:['ats score','ats check','ats friendly'],
     ans:'Mirror exact keywords from the job description in your resume. Use standard section headings. Avoid headers/footers, columns, and images — ATS bots can miss them.' },
   { keys:['ats'],
     ans:'Use job-description keywords, avoid tables and images, keep formatting simple, and save as PDF to preserve layout.' },
 
-  // ── Match score ──────────────────────────────────────────────────
+  
   { keys:['match score','75','score low','score below','percentage'],
     ans:'You need 75%+ to apply. Upload your resume, pick a role, and click "Check Match". The gap panel shows exactly which skills to add.' },
   { keys:['score','check match'],
     ans:'Click "Check Match" on any job card after uploading your resume. A score ≥75% unlocks the Apply button.' },
 
-  // ── Skills & gaps ────────────────────────────────────────────────
+  
   { keys:['skill gap','missing skill','what skill','which skill'],
     ans:'After uploading your resume, click "Check Match" on a role. The Gap panel shows missing skills with free learning resources for each.' },
   { keys:['learn python','study python'],
@@ -682,7 +682,7 @@ const KB = [
   { keys:['skill','missing'],
     ans:'Upload your resume and click "Check Match" on a role to see your personalised skill gaps and learning resources.' },
 
-  // ── Internship ───────────────────────────────────────────────────
+
   { keys:['internship tip','internship advice','how to get internship'],
     ans:'Apply early, customise your cover note for each role, follow up politely after a week, and network on LinkedIn with alumni in the company.' },
   { keys:['internship stipend','salary internship'],
@@ -694,13 +694,13 @@ const KB = [
   { keys:['internship'],
     ans:'Treat every internship like a real job — deliver quality work, ask thoughtful questions, and build genuine relationships. Many PPOs come from strong intern performance.' },
 
-  // ── Placement / full-time ────────────────────────────────────────
+
   { keys:['placement','full time','full-time job','campus placement'],
     ans:'Campus placements usually start in Sept–Nov for Dec batches. Keep your resume updated, attend mock tests, and practice DSA daily from July onwards.' },
   { keys:['package','ctc','salary'],
     ans:'For freshers, Indian IT packages range ₹3–8 LPA (service), ₹12–45 LPA (product). Focus on DSA + system design + a strong project portfolio to target product companies.' },
 
-  // ── Interview ────────────────────────────────────────────────────
+  
   { keys:['interview tip','interview advice','how to prepare interview'],
     ans:'Practice mocks on Pramp or interviewing.io, revise your projects deeply, and prepare 5 STAR stories. Research the company\'s recent news before each round.' },
   { keys:['star method','behavioural','behaviour question'],
@@ -718,7 +718,7 @@ const KB = [
   { keys:['interview'],
     ans:'Practice mocks, revise your resume projects thoroughly, and use the STAR method for behavioural questions. Revise fundamentals of your core subjects too.' },
 
-  // ── LinkedIn ─────────────────────────────────────────────────────
+  
   { keys:['linkedin headline','linkedin profile','linkedin bio'],
     ans:'Headline: "Final-year [Branch] Student | [Top 2 Skills] | Seeking [Role]". Add a professional photo, 3+ featured projects, and a warm summary in first person.' },
   { keys:['linkedin connect','linkedin network','linkedin message'],
@@ -728,7 +728,7 @@ const KB = [
   { keys:['linkedin'],
     ans:'Sharp headline, updated project section with links, consistent activity (1 post/week), and targeted connections in your domain. Recruiters search LinkedIn daily.' },
 
-  // ── Platform ─────────────────────────────────────────────────────
+  
   { keys:['how to apply','apply for job','apply here'],
     ans:'Upload your PDF resume → click "Check Match" on a role → score 75%+ → click "Apply" → fill the form → Preview → Submit. Takes under 3 minutes.' },
   { keys:['limit','how many application','max application'],
@@ -758,13 +758,13 @@ const KB = [
   { keys:['similar job','related job','other role'],
     ans:'After checking a match, a "Similar Roles" strip appears below. These are jobs in the same category or matching your branch — worth exploring.' },
 
-  // ── Portfolio & GitHub ───────────────────────────────────────────
+  
   { keys:['portfolio','personal website'],
     ans:'Build a simple portfolio with: About, Skills, Projects (with live links), and Contact. Use GitHub Pages or Netlify for free hosting — takes under an hour.' },
   { keys:['github','open source','contribution'],
     ans:'A green contribution graph signals consistency to recruiters. Start by fixing README typos in popular repos, then tackle "good first issue" labelled tasks.' },
 
-  // ── Soft skills & professional growth ───────────────────────────
+  
   { keys:['communication','soft skill','speak'],
     ans:'Join Toastmasters or a college debate club. Record yourself explaining a technical concept — it exposes filler words and pacing issues fast.' },
   { keys:['network','networking','alumni'],
@@ -774,7 +774,7 @@ const KB = [
   { keys:['freelance','side project','freelancing'],
     ans:'Freelancing sharpens real-world skills and adds client experience to your resume. Toptal, Upwork, and LinkedIn are good starting points once you have 1–2 strong projects.' },
 
-  // ── Mental health & motivation ───────────────────────────────────
+  
   { keys:['reject','rejected','no response','ghosted'],
     ans:'Every rejection is data, not identity. Note what you can improve (resume, skills, preparation), adjust, and reapply. Most offers come after 20–50 applications.' },
   { keys:['nervous','anxious','anxiety','scared'],
@@ -786,7 +786,7 @@ const KB = [
   { keys:['motivation','inspire','encourage'],
     ans:'Bookmark one role you truly want. Look at it every morning. Let the vision pull you forward on days when discipline alone isn\'t enough.' },
 
-  // ── General greetings & catch-all ───────────────────────────────
+  
   { keys:['hello','hi','hey','good morning','good evening'],
     ans:'Hi there! 👋 I\'m your Career AI Tutor. Ask me about resumes, interviews, internships, skill gaps, LinkedIn, or how to use this platform.' },
   { keys:['thank','thanks','thankyou'],
@@ -797,7 +797,7 @@ const KB = [
 
 function kbFallback(txt) {
   const lq = txt.toLowerCase();
-  // Try multi-key match first (all keys present), then any single key
+  
   const multiMatch = KB.find(e => e.keys.length > 1 && e.keys.every(k => lq.includes(k)));
   if (multiMatch) return multiMatch.ans;
   const anyMatch = KB.find(e => e.keys.some(k => lq.includes(k)));
@@ -814,7 +814,7 @@ window.aiSend = function () {
   inp.value = '';
   msgs.scrollTop = msgs.scrollHeight;
 
-  // Simulate a brief "thinking" delay for a natural feel
+  
   const typingId = 'ai-typing-' + Date.now();
   msgs.innerHTML += `<div class="ai-bot" id="${typingId}" style="opacity:.6;">Thinking…</div>`;
   msgs.scrollTop = msgs.scrollHeight;
@@ -828,7 +828,7 @@ window.aiSend = function () {
   }, 420);
 };
 
-/* ── Toast ────────────────────────────────── */
+
 window.toast = function (msg, type = 'info') {
   const icons = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️' };
   const el = document.createElement('div');

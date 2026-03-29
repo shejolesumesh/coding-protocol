@@ -1,7 +1,4 @@
-/**
- * job.js — Job Details Page
- * Reads ?id= from URL, renders full job, fetches live popularity from Firestore.
- */
+
 
 import { collection, getDocs, query, where } from
   'https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js';
@@ -26,7 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadPopularity(job);
 });
 
-/* ── Render static job data ──────────────────────────── */
+
 function renderJob(job) {
   document.title = `${job.title} @ ${job.company} — Coding Protocol`;
 
@@ -85,7 +82,7 @@ function renderJob(job) {
   }
 }
 
-/* ── Load live popularity + quota from Firestore ─────── */
+
 async function loadPopularity(job) {
   try {
     const q    = query(collection(db, 'applications'), where('role', '==', job.title));
@@ -128,13 +125,13 @@ async function loadPopularity(job) {
   }
 }
 
-/* ── Apply redirect ──────────────────────────────────── */
+
 window.startApply = function startApply() {
   sessionStorage.setItem('cp_pending_job', job.id);
   window.location.href = 'index.html';
 };
 
-/* ── Toast ───────────────────────────────────────────── */
+
 window.toast = function toast(msg, type = 'info') {
   const icons = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️' };
   const el = document.createElement('div');

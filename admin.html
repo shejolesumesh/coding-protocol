@@ -29,7 +29,7 @@
   <h1 class="admin-heading">Hiring Dashboard</h1>
   <p class="admin-sub">Manage applications, update pipeline stages, and export data.</p>
 
-  <!-- Stat cards -->
+  
   <div class="stat-grid" id="statGrid">
     <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value" id="st-total">—</div></div>
     <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" id="st-pending">—</div></div>
@@ -39,13 +39,13 @@
     <div class="stat-card"><div class="stat-label">Rejected</div><div class="stat-value" id="st-rejected">—</div></div>
   </div>
 
-  <!-- Charts -->
+  
   <div class="charts-row">
     <div class="chart-card"><h4>Pipeline Breakdown</h4><canvas id="pipelineChart" style="max-height:200px;"></canvas></div>
     <div class="chart-card"><h4>Applications by Role</h4><canvas id="roleChart" style="max-height:200px;"></canvas></div>
   </div>
 
-  <!-- Admin Activity Log -->
+  
   <div class="glass panel" style="margin-bottom:20px;">
     <div class="section-label">Admin Activity Log</div>
     <div class="activity-feed" id="adminActivityFeed">
@@ -53,7 +53,7 @@
     </div>
   </div>
 
-  <!-- Table controls -->
+  
   <div class="table-controls">
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
       <input class="filter-select" id="tableSearch" type="text" placeholder="Search name, email, role…" style="min-width:220px;padding:9px 13px;border-radius:var(--r-sm);" oninput="renderTable()">
@@ -85,7 +85,7 @@
     </div>
   </div>
 
-  <!-- Bulk actions bar -->
+  
   <div class="bulk-bar" id="bulkBar">
     <span id="bulkCount">0 selected</span>
     <select class="filter-select" id="bulkStageSelect" style="padding:6px 10px;width:auto;">
@@ -100,7 +100,7 @@
     <button class="btn btn-ghost btn-sm" onclick="clearSelection()">✕ Clear</button>
   </div>
 
-  <!-- Table -->
+  
   <div class="table-wrap">
     <table class="data-table" id="appTable">
       <thead>
@@ -124,7 +124,7 @@
   </div>
 </div>
 
-<!-- Confirm modal -->
+
 <div id="popup" class="modal-overlay">
   <div class="modal-box">
     <h2 id="popupTitle"></h2><p id="popupMsg"></p>
