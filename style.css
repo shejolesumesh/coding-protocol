@@ -34,7 +34,7 @@ body {
   color: var(--txt); min-height: 100vh; overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
-/* Deep space gradient behind everything */
+
 body::before {
   content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background:
@@ -46,7 +46,7 @@ body::before {
 a { color: var(--sky); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-/* ── GLASS CORE ── */
+
 .glass {
   background: var(--glass-1);
   backdrop-filter: var(--blur);
@@ -59,7 +59,7 @@ a:hover { text-decoration: underline; }
 .z1 { position: relative; z-index: 1; }
 .page { position: relative; z-index: 1; max-width: 1320px; margin: 0 auto; padding: 0 28px 80px; }
 
-/* ── SECTION LABEL ── */
+
 .section-label {
   display: flex; align-items: center; gap: 9px;
   font-family: var(--f-head); font-size: .76rem; font-weight: 700;
@@ -71,7 +71,6 @@ a:hover { text-decoration: underline; }
   flex-shrink: 0;
 }
 
-/* ── NAV ── */
 .top-nav {
   position: sticky; top: 0; z-index: 50;
   display: flex; align-items: center; justify-content: space-between;
@@ -92,7 +91,7 @@ a:hover { text-decoration: underline; }
 }
 .nav-links { display: flex; align-items: center; gap: 8px; }
 
-/* ── SITE HEADER ── */
+
 .site-header { text-align: center; padding: 56px 24px 44px; }
 .site-header .eyebrow {
   display: inline-flex; align-items: center; gap: 7px; font-size: .71rem;
@@ -110,7 +109,7 @@ a:hover { text-decoration: underline; }
 }
 .site-header .sub { color: var(--txt-2); font-size: 1rem; }
 
-/* ── BUTTONS ── */
+
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   padding: 10px 22px; border-radius: var(--r-sm); border: none;
@@ -145,7 +144,7 @@ a:hover { text-decoration: underline; }
 .btn-full { width: 100%; }
 .btn:disabled { opacity: .3; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
 
-/* ── STATUS BADGES ── */
+
 .status-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 100px; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; backdrop-filter: var(--blur-sm); }
 .s-pending     { background: rgba(245,158,11,0.12);  color: var(--amber);  border: 1px solid rgba(245,158,11,0.3); }
 .s-shortlisted { background: rgba(56,189,248,0.12);  color: var(--sky);    border: 1px solid rgba(56,189,248,0.3); }
@@ -154,22 +153,17 @@ a:hover { text-decoration: underline; }
 .s-rejected    { background: rgba(244,63,94,0.12);   color: var(--rose);   border: 1px solid rgba(244,63,94,0.3); }
 .s-withdrawn   { background: rgba(71,85,105,0.15);   color: var(--txt-3);  border: 1px solid rgba(71,85,105,0.25); }
 
-/* ══════════════════════════════════════════
-   GLASSMORPHISM OVERLAYS — Three.js shines through
-   ══════════════════════════════════════════ */
-
-/* ── ONBOARDING OVERLAY ── */
 .onboarding-overlay {
   position: fixed; inset: 0; z-index: 99999;
   display: flex; align-items: center; justify-content: center;
-  /* Semi-transparent so Three.js constellation is visible */
+  
   background: rgba(3,6,18,0.6);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
 
 .onboarding-card {
-  /* True glass: particles visible behind this panel */
+  
   background: rgba(8,18,50,0.38);
   backdrop-filter: var(--blur-lg);
   -webkit-backdrop-filter: var(--blur-lg);
